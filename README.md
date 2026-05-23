@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Relavoi Tenant Dashboard
 
-## Getting Started
+Web dashboard for Relavoi tenants to manage sessions, view analytics, configure settings, and monitor usage.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router, Turbopack)
+- React 19, TypeScript strict
+- Tailwind v4 (CSS-based `@theme inline` design tokens)
+- Zustand + persist for client auth (localStorage key `relavoi.auth.v1`)
+- TanStack React Query for data
+- Recharts for charts; lucide-react for icons
+- IBM Plex Sans + Plex Mono via `next/font/google`
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
+npm install
+npm run dev -- -p 3001
+# open http://localhost:3001/login
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dashboard needs the [relavoi-backend](https://github.com/cicanda/relavoi-backend) API to be reachable at the URL in `NEXT_PUBLIC_API_URL`. For local dev that's `http://localhost:3000/v1`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Dev credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run `npm run seed` in `relavoi-backend` first. Then log in with:
 
-## Learn More
+| Email | Password |
+|---|---|
+| `dev@chowdeck.com` | `password123` |
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Route | Description |
+|---|---|
+| `/login` | Email + password sign-in |
+| `/signup` | 4-step onboarding wizard (Company → Use case → Numbers → Review) |
+| `/dashboard` | Overview — greeting, active-session stats, recent sessions table |
+| `/dashboard/sessions` | List + filter sessions; cursor pagination |
+| `/dashboard/sessions/[id]` | Detail — timeline, metadata, Calls/SMS tabs, End Session action |
+| `/dashboard/calls` | Cross-session call history with summary stats |
+| `/dashboard/numbers` | Number pool — utilization gauge, per-region/per-provider tables |
+| `/dashboard/analytics` | Call volume area chart, direction pie, sessions line chart |
+| `/dashboard/billing` | Current period, per-metric progress bars, history |
+| `/dashboard/api-keys` | View masked key + Rotate flow + SDK quick-start snippets |
+| `/dashboard/webhooks` | Endpoint config, delivery log, signature verification examples |
+| `/dashboard/sdk-docs` | Install + initialize tabs (Android/iOS/Web), feature grid |
+| `/dashboard/settings` | General, Team, Session defaults, Recording, Push, SMS, Workspace, Password |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project layout
 
-## Deploy on Vercel
+```
+src/
+  app/                  app router pages + layouts
+  components/           shared UI (brand-mark, state-pill, stat-card, …)
+  components/dashboard/ sidebar, topbar, auth-guard
+  lib/
+    types.ts            Session, CallRecord, Tenant, …
+    auth-store.ts       zustand+persist; key `relavoi.auth.v1`
+    api.ts              axios client + login/signup/etc
+    format.ts           fmtRelative, fmtAbsolute, fmtNumber, slugify, …
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Design system
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tokens live in `src/app/globals.css` (Tailwind v4 `@theme inline`):
+ink-{200..900}, bone-100, paper, signal-{500..700} (brand green).
+Typography is IBM Plex Sans (UI) + IBM Plex Mono (IDs, phone numbers, codes).
+
+See the public design language reference at https://docs.relavoi.com/design.
+
+## Build & deploy
+
+```bash
+npm run build          # production build
+npm run start          # serve the build locally
+```
+
+Production deploys via the Vercel Git integration (`main` → prod, branches → previews). Set `NEXT_PUBLIC_API_URL=https://api.relavoi.com/v1` in the Vercel project's environment variables. `.github/workflows/ci.yml` runs type-check + build on every PR; `deploy.yml` is a stub for CI-driven deploys when needed.
+
+## Related Repositories
+
+- [relavoi-backend](https://github.com/cicanda/relavoi-backend) — API server
+- [relavoi-admin](https://github.com/cicanda/relavoi-admin) — Operator console
+- [relavoi-android-sdk](https://github.com/cicanda/relavoi-android-sdk) — Android SDK
+- [relavoi-ios-sdk](https://github.com/cicanda/relavoi-ios-sdk) — iOS SDK
+- [relavoi-docs](https://github.com/cicanda/relavoi-docs) — Documentation site
+- [relavoi-infra](https://github.com/cicanda/relavoi-infra) — Terraform infrastructure

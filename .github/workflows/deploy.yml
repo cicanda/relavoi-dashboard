@@ -1,0 +1,25 @@
+name: Deploy
+
+# Vercel auto-deploys on push via the Git integration (Vercel ↔ GitHub).
+# This workflow is intentionally a stub so the deployment surface is
+# discoverable from the repo. Wire up the manual path below only if you
+# need CI-driven deploys (e.g. canary, env-specific overrides).
+
+on:
+  workflow_dispatch: # manual trigger only — Vercel's Git integration handles the auto path
+
+jobs:
+  vercel-deploy:
+    runs-on: ubuntu-latest
+    if: false # disabled until VERCEL_TOKEN + project IDs are wired
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci
+      - name: Vercel CLI deploy (prod)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel --prod --yes --token "$VERCEL_TOKEN"
