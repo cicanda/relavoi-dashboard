@@ -116,12 +116,16 @@ export interface PaginatedResponse<T> {
   pagination: { count: number; after?: string | null };
 }
 
+// Matches the backend deliveryLogDto emitted by GET /webhooks/logs and
+// GET /webhooks (recentDeliveries).
 export interface WebhookDeliveryLog {
   id: string;
-  eventType: string;
+  event: string;
   url?: string;
-  status?: number | null;
+  statusCode?: number | null;
   success: boolean;
-  attemptNumber?: number;
-  deliveredAt: string;
+  attemptCount?: number;
+  error?: string | null;
+  requestedAt: string;
+  completedAt?: string | null;
 }

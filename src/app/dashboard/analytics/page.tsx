@@ -178,14 +178,14 @@ export default function AnalyticsPage() {
 
   const callsListQ = useQuery({
     queryKey: ["analytics", "calls-list", periodStart, periodEnd],
-    queryFn: () => listCalls({ periodStart, periodEnd, limit: 200 }),
+    queryFn: () => listCalls({ periodStart, periodEnd, limit: 100 }),
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
 
   const activeSessionsQ = useQuery({
     queryKey: ["analytics", "active-sessions"],
-    queryFn: () => listSessions({ state: "ACTIVE", limit: 200 }),
+    queryFn: () => listSessions({ state: "ACTIVE", limit: 100 }),
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
@@ -194,24 +194,21 @@ export default function AnalyticsPage() {
   const sessionBuckets: TimeBucket[] = sessionsQ.data ?? [];
   const callsList: CallRecord[] = callsListQ.data?.data ?? [];
 
-  // Summary stats
-  const totalCalls = useMemo(() => {
-    return callBuckets.reduce((sum, b) => {
-      const keys = Object.keys(b).filter((k) => k !== "ts");
-      return sum + keys.reduce((s, k) => s + asNumber(b[k]), 0);
-    }, 0);
-  }, [callBuckets]);
+  // Summary stats. Each bucket from /analytics/call-success-rate is
+  // { ts, total, answered, completed, missed, failed, rate } — `total` is the
+  // authoritative per-bucket count, so sum that (summing all keys would
+  // double-count via `total` and `rate`).
+  const totalCalls = useMemo(
+    () => callBuckets.reduce((sum, b) => sum + asNumber(b.total), 0),
+    [callBuckets],
+  );
 
   const answerRate = useMemo(() => {
     let answered = 0;
     let total = 0;
     for (const b of callBuckets) {
-      const a = asNumber(b.answered) + asNumber(b.completed);
-      const all = Object.keys(b)
-        .filter((k) => k !== "ts")
-        .reduce((s, k) => s + asNumber(b[k]), 0);
-      answered += a;
-      total += all;
+      answered += asNumber(b.answered) + asNumber(b.completed);
+      total += asNumber(b.total);
     }
     if (total === 0) return "—";
     return `${Math.round((answered / total) * 100)}%`;

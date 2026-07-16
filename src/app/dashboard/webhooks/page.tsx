@@ -449,7 +449,7 @@ export default function WebhooksPage() {
                 logs.map((log) => (
                   <tr key={log.id} className="hover:bg-bone-100/60 transition-colors">
                     <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
-                      {log.eventType}
+                      {log.event}
                     </td>
                     <td className="px-4 py-3 border-t border-ink-200">
                       <StatePill
@@ -458,16 +458,16 @@ export default function WebhooksPage() {
                       />
                     </td>
                     <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
-                      {log.status ?? "—"}
+                      {log.statusCode ?? "—"}
                     </td>
                     <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
-                      {log.attemptNumber ?? 1}
+                      {log.attemptCount ?? 1}
                     </td>
                     <td
                       className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
-                      title={fmtAbsolute(log.deliveredAt)}
+                      title={fmtAbsolute(log.requestedAt)}
                     >
-                      {fmtRelative(log.deliveredAt)}
+                      {fmtRelative(log.requestedAt)}
                     </td>
                   </tr>
                 ))

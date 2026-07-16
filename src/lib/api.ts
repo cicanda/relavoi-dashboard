@@ -15,7 +15,7 @@ import type {
   WebhookDeliveryLog,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/v1";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1";
 
 export const api: AxiosInstance = axios.create({
   baseURL: BASE,
@@ -175,9 +175,9 @@ export async function listCalls(params: {
 
 // ─── Numbers ──────────────────────────────────────────────────────────────────
 export async function getPool() {
-  const { data } = await api.get<{ regions: PoolStatus[] } | PoolStatus[]>("/numbers/pool");
-  // Backend may emit either shape — normalize to array.
-  return Array.isArray(data) ? data : data.regions;
+  // Backend shape: { pools: PoolStatus[] }. Tolerate a bare array too.
+  const { data } = await api.get<{ pools: PoolStatus[] } | PoolStatus[]>("/numbers/pool");
+  return Array.isArray(data) ? data : (data.pools ?? []);
 }
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
@@ -222,8 +222,9 @@ export async function getCallSuccessRate(
 export async function getWebhookConfig() {
   const { data } = await api.get<{
     url?: string | null;
-    secret?: string | null;
-    deliveryLogs?: WebhookDeliveryLog[];
+    events?: string[];
+    hasSecret?: boolean;
+    recentDeliveries?: WebhookDeliveryLog[];
   }>("/webhooks");
   return data;
 }

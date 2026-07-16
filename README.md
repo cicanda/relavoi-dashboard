@@ -21,7 +21,7 @@ npm run dev -- -p 3001
 # open http://localhost:3001/login
 ```
 
-The dashboard needs the [relavoi-backend](https://github.com/cicanda/relavoi-backend) API to be reachable at the URL in `NEXT_PUBLIC_API_URL`. For local dev that's `http://localhost:3000/v1`.
+The dashboard needs the [relavoi-backend](https://github.com/cicanda/relavoi-backend) API to be reachable at the URL in `NEXT_PUBLIC_API_URL`. For local dev that's `http://localhost:8080/v1`.
 
 ## Dev credentials
 

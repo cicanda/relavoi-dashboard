@@ -77,7 +77,7 @@ export default function OverviewPage() {
 
   const activeQ = useQuery({
     queryKey: ["overview", "active-sessions"],
-    queryFn: () => listSessions({ state: "ACTIVE", limit: 200 }),
+    queryFn: () => listSessions({ state: "ACTIVE", limit: 100 }),
     staleTime: 30_000,
   });
 
