@@ -15,7 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { listSessions, listCalls } from "@/lib/api";
+import { listSessions, listCalls, getConfig } from "@/lib/api";
 import { useAuth } from "@/lib/auth-store";
 import { truncId, fmtRelative, fmtNumber } from "@/lib/format";
 import { StatCard } from "@/components/stat-card";
@@ -96,8 +96,17 @@ export default function OverviewPage() {
 
   const callsQ = useQuery({
     queryKey: ["overview", "calls-30d", periodStart, periodEnd],
-    queryFn: () => listCalls({ periodStart, periodEnd, limit: 1 }),
+    // limit:100 (the API max) so the count reflects real calls, not the page size.
+    queryFn: () => listCalls({ periodStart, periodEnd, limit: 100 }),
     staleTime: 30_000,
+  });
+
+  // Full tenant config (grace period, expired behavior, recording) — the
+  // auth-store tenant only carries id/name/tier/status.
+  const configQ = useQuery({
+    queryKey: ["overview", "config"],
+    queryFn: getConfig,
+    staleTime: 60_000,
   });
 
   useEffect(() => {
@@ -114,11 +123,12 @@ export default function OverviewPage() {
 
   const activeCount = activeQ.data?.data.length ?? 0;
   const callsTotal =
-    callsQ.data?.pagination.count != null
-      ? fmtNumber(callsQ.data.pagination.count)
+    callsQ.data?.data != null
+      ? fmtNumber(callsQ.data.data.length)
       : callsQ.error
         ? "—"
         : undefined;
+  const config = configQ.data;
 
   const recentSessions: Session[] = activeRecentQ.data?.data ?? [];
 
@@ -265,15 +275,15 @@ export default function OverviewPage() {
           <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
             <h2 className="text-sm font-semibold text-ink-900 mb-3">Quick Config</h2>
             <dl className="space-y-2.5">
-              <ConfigRow label="Tier" value={tenant?.tier ?? "—"} />
+              <ConfigRow label="Tier" value={config?.tier ?? tenant?.tier ?? "—"} />
               <ConfigRow
                 label="Recording"
-                value={tenant?.recordingEnabled ? "Enabled" : "Disabled"}
+                value={config?.recordingEnabled ? "Enabled" : "Disabled"}
               />
               <ConfigRow
                 label="Push"
                 value={
-                  tenant?.pushConfig && Object.keys(tenant.pushConfig).length > 0
+                  config?.pushConfig && Object.keys(config.pushConfig).length > 0
                     ? "Configured"
                     : "Not configured"
                 }
@@ -281,12 +291,12 @@ export default function OverviewPage() {
               <ConfigRow
                 label="Grace Period"
                 value={
-                  tenant?.defaultGracePeriod != null ? `${tenant.defaultGracePeriod} min` : "—"
+                  config?.defaultGracePeriod != null ? `${config.defaultGracePeriod} min` : "—"
                 }
               />
               <ConfigRow
                 label="Expired Behavior"
-                value={tenant?.expiredCallBehavior ?? "—"}
+                value={config?.expiredCallBehavior ?? "—"}
                 mono
               />
             </dl>
