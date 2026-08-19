@@ -75,13 +75,6 @@ export default function NumbersPage() {
       .sort((a, b) => a.region.localeCompare(b.region));
   }, [rows]);
 
-  const byProvider = useMemo(() => {
-    const groups = groupBy(rows, (r) => r.provider);
-    return Object.entries(groups)
-      .map(([provider, providerRows]) => ({ provider, ...aggregate(providerRows) }))
-      .sort((a, b) => a.provider.localeCompare(b.provider));
-  }, [rows]);
-
   const loading = poolQ.isLoading;
   const updatedLabel =
     poolQ.dataUpdatedAt > 0 ? fmtRelative(new Date(poolQ.dataUpdatedAt).toISOString()) : "—";
@@ -251,71 +244,6 @@ export default function NumbersPage() {
                     </tr>
                   );
                 })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* By Provider */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
-        <div className="px-5 py-4 border-b border-ink-200">
-          <h2 className="text-sm font-semibold text-ink-900">By Provider</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr>
-                {["Provider", "Total", "Available", "In Use", "Cooldown"].map((h) => (
-                  <th
-                    key={h}
-                    className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 2 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: 5 }).map((__, j) => (
-                      <td key={j} className="px-4 py-3 border-t border-ink-200">
-                        <Skeleton className="h-3 w-full" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : byProvider.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 border-t border-ink-200 text-center text-sm text-ink-500"
-                  >
-                    No providers configured yet.
-                  </td>
-                </tr>
-              ) : (
-                byProvider.map((p) => (
-                  <tr key={p.provider}>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono uppercase tracking-wider">
-                      {p.provider}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
-                      {fmtNumber(p.total)}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-signal-700 tabular-nums">
-                      {fmtNumber(p.available)}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-blue-700 tabular-nums">
-                      {fmtNumber(p.inUse)}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-amber-700 tabular-nums">
-                      {fmtNumber(p.cooldown)}
-                    </td>
-                  </tr>
-                ))
               )}
             </tbody>
           </table>

@@ -37,7 +37,6 @@ interface SignupDraft {
   useCase: string;
   // Step 3
   requestedPoolSize: number;
-  carrierMix: string;
   defaultSessionTtlMin: number;
   cooldownMin: number;
   // Step 4
@@ -60,7 +59,6 @@ const DEFAULT_DRAFT: SignupDraft = {
   regions: [],
   useCase: "",
   requestedPoolSize: 100,
-  carrierMix: "AT only",
   defaultSessionTtlMin: 120,
   cooldownMin: 5,
   nccConsent: false,
@@ -83,11 +81,6 @@ const SESSIONS_OPTIONS = [
 ] as const;
 const LIFESPAN_OPTIONS = ["<1h", "1-3h", "3-12h", "12-24h", "1-7d", ">7d"];
 const REGIONS_OPTIONS = ["Lagos", "Abuja", "Port Harcourt", "Kano", "Ibadan", "Other"];
-const CARRIER_MIX_OPTIONS = [
-  "AT only",
-  "AT + Twilio failover (20%)",
-  "Custom (talk to sales)",
-];
 const COUNTRY_OPTIONS = [
   { code: "NG", label: "Nigeria" },
   { code: "GH", label: "Ghana" },
@@ -273,7 +266,6 @@ export default function SignupPage() {
     if (s === 3) {
       if (draft.requestedPoolSize < 10 || draft.requestedPoolSize > 500)
         e.requestedPoolSize = "Pool size must be between 10 and 500.";
-      if (!draft.carrierMix) e.carrierMix = "Select a carrier mix.";
       if (draft.defaultSessionTtlMin < 30 || draft.defaultSessionTtlMin > 1440)
         e.defaultSessionTtlMin = "Session TTL must be between 30 and 1440 minutes.";
       if (draft.cooldownMin < 0 || draft.cooldownMin > 60)
@@ -337,7 +329,6 @@ export default function SignupPage() {
         avgSessionLifespan: draft.avgSessionLifespan,
         regions: draft.regions,
         requestedPoolSize: draft.requestedPoolSize,
-        carrierMix: draft.carrierMix,
         defaultSessionTtlMin: draft.defaultSessionTtlMin,
         cooldownMin: draft.cooldownMin,
         ncc_consent: true,
@@ -809,20 +800,6 @@ function Step3({
         fieldKey="requestedPoolSize"
       />
 
-      <Field label="Carrier mix" error={errors.carrierMix} fieldKey="carrierMix">
-        <select
-          value={draft.carrierMix}
-          onChange={(e) => update("carrierMix", e.target.value)}
-          className="w-full h-9 px-3 border border-ink-200 rounded-md text-[13px] bg-paper focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 transition-colors"
-        >
-          {CARRIER_MIX_OPTIONS.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </Field>
-
       <SliderField
         label="Default session TTL"
         hint="Hard timeout for a masking session after creation."
@@ -893,7 +870,6 @@ function Step4({
 
       <SummarySection title="Numbers">
         <SummaryRow label="Pool size" value={`${draft.requestedPoolSize} numbers`} mono />
-        <SummaryRow label="Carrier mix" value={draft.carrierMix} />
         <SummaryRow label="Session TTL" value={`${draft.defaultSessionTtlMin} min`} mono />
         <SummaryRow label="Cooldown" value={`${draft.cooldownMin} min`} mono />
       </SummarySection>
@@ -914,8 +890,8 @@ function Step4({
             className="mt-0.5 w-4 h-4 rounded border-ink-300 text-signal-500 focus:ring-signal-500"
           />
           <span>
-            I confirm Relavoi will provision numbers through licensed CPaaS providers in
-            compliance with NCC type-approval requirements.
+            I confirm Relavoi will provision numbers in compliance with NCC
+            type-approval requirements.
           </span>
         </label>
         {errors.nccConsent && (

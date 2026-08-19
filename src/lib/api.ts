@@ -81,7 +81,6 @@ export interface SignupPayload {
   avgSessionLifespan?: string;
   regions?: string[];
   requestedPoolSize?: number;
-  carrierMix?: string;
   defaultSessionTtlMin?: number;
   cooldownMin?: number;
   ncc_consent?: boolean;
