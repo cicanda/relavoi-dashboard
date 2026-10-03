@@ -23,6 +23,16 @@ export interface Tenant {
   recordingConsentMode?: ConsentPrompt;
   recordingConsentAudioUrl?: string | null;
   pushConfig?: Record<string, unknown>;
+  // Workspace setup. Signup stopped asking for these; they are edited in
+  // Settings → Workspace Setup and are null until someone fills them in.
+  workspaceSlug?: string | null;
+  country?: string | null;
+  industry?: string | null;
+  requestedPoolSize?: number | null;
+  defaultSessionTtlMin?: number | null;
+  cooldownMin?: number | null;
+  /** False until the tenant generates credentials from the API keys page. */
+  hasApiCredentials?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

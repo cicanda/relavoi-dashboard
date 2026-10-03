@@ -71,28 +71,24 @@ export interface SignupPayload {
   companyName: string;
   email: string;
   password: string;
-  fullName?: string;
+  name: string;
+  // Signup no longer collects any of this -- it lives in Settings → Workspace
+  // Setup -- but the API still accepts it, so an integrator who already has the
+  // answers can send them.
   workspaceSlug?: string;
   country?: string;
   industry?: string;
   companySize?: string;
   useCase?: string;
-  expectedSessionsPerDay?: string;
-  avgSessionLifespan?: string;
-  regions?: string[];
   requestedPoolSize?: number;
   defaultSessionTtlMin?: number;
   cooldownMin?: number;
-  ncc_consent?: boolean;
 }
 
 export interface SignupResponse {
-  tenantId: string;
-  apiKey: string;
-  apiSecret: string;
   accessToken: string;
   user: TenantUser;
-  tenant?: Tenant;
+  tenant: Tenant;
 }
 
 export async function signup(payload: SignupPayload) {

@@ -136,7 +136,11 @@ export default function SettingsPage() {
           saving={patchMut.isPending}
         />
 
-        <WorkspaceCard tenant={tenant} />
+        <WorkspaceSetupCard
+          tenant={tenant}
+          onSave={(patch) => patchMut.mutate(patch)}
+          saving={patchMut.isPending}
+        />
 
         <ChangePasswordCard />
       </div>
@@ -807,51 +811,138 @@ function SmsCard({
   );
 }
 
-// ─── Workspace (read-only signup metadata) ──────────────────────────────────
+// ─── Workspace setup (moved off the signup form) ────────────────────────────
 
-function WorkspaceCard({ tenant }: { tenant: Tenant }) {
-  const meta = readPush(tenant);
+/**
+ * Signup asks four questions and nothing else, so everything here starts empty.
+ * It used to be captured during onboarding and shown read-only ("contact
+ * support to change these"), which would now leave the fields unsettable
+ * forever. They are editable.
+ */
+function WorkspaceSetupCard({
+  tenant,
+  onSave,
+  saving,
+}: {
+  tenant: Tenant;
+  onSave: (patch: Partial<Tenant>) => void;
+  saving: boolean;
+}) {
+  const legacy = readPush(tenant);
+  const initial = {
+    industry: tenant.industry ?? legacy.industry ?? "",
+    country: tenant.country ?? legacy.country ?? "",
+    workspaceSlug: tenant.workspaceSlug ?? legacy.workspace_slug ?? "",
+    requestedPoolSize: tenant.requestedPoolSize ?? legacy.requested_pool_size ?? null,
+    defaultSessionTtlMin: tenant.defaultSessionTtlMin ?? legacy.default_session_ttl_min ?? null,
+    cooldownMin: tenant.cooldownMin ?? legacy.cooldown_min ?? null,
+  };
+
+  const [industry, setIndustry] = useState(initial.industry);
+  const [country, setCountry] = useState(initial.country);
+  const [slug, setSlug] = useState(initial.workspaceSlug);
+  const [poolSize, setPoolSize] = useState<string>(
+    initial.requestedPoolSize != null ? String(initial.requestedPoolSize) : "",
+  );
+  const [ttl, setTtl] = useState<string>(
+    initial.defaultSessionTtlMin != null ? String(initial.defaultSessionTtlMin) : "",
+  );
+  const [cooldown, setCooldown] = useState<string>(
+    initial.cooldownMin != null ? String(initial.cooldownMin) : "",
+  );
+
+  function onSubmit() {
+    const patch: Partial<Tenant> = {
+      industry: industry.trim() || null,
+      country: country.trim().toUpperCase() || null,
+      workspaceSlug: slug.trim() || null,
+      requestedPoolSize: poolSize.trim() ? Number(poolSize) : null,
+    };
+    // TTL and cooldown have server-side defaults; only send real numbers.
+    if (ttl.trim()) patch.defaultSessionTtlMin = Number(ttl);
+    if (cooldown.trim()) patch.cooldownMin = Number(cooldown);
+    onSave(patch);
+  }
+
   return (
     <Card
-      title="Workspace"
-      description="Configured during signup. Contact support to change these."
+      title="Workspace setup"
+      description="Optional context we no longer ask for at signup. Fill it in whenever you're ready."
+      footer={
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={saving}
+          className="bg-ink-900 text-paper px-4 h-9 rounded-md text-[13px] font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save workspace setup"}
+        </button>
+      }
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <ReadOnlyRow label="Workspace slug" value={meta.workspace_slug ?? "—"} mono />
-        <ReadOnlyRow label="Country" value={meta.country ?? "—"} mono />
-        <ReadOnlyRow label="Industry" value={meta.industry ?? "—"} />
-        <ReadOnlyRow
-          label="Default session TTL"
-          value={meta.default_session_ttl_min != null ? `${meta.default_session_ttl_min} min` : "—"}
-          mono
-        />
-        <ReadOnlyRow
-          label="Cooldown"
-          value={meta.cooldown_min != null ? `${meta.cooldown_min} min` : "—"}
-          mono
-        />
-        <ReadOnlyRow
-          label="Requested pool size"
-          value={meta.requested_pool_size != null ? `${meta.requested_pool_size} numbers` : "—"}
-          mono
-        />
+        <div>
+          <Label>Industry</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px]"
+            value={industry}
+            placeholder="Delivery"
+            onChange={(e) => setIndustry(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label>Country</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono uppercase"
+            value={country}
+            maxLength={2}
+            placeholder="NG"
+            onChange={(e) => setCountry(e.target.value)}
+          />
+          <Hint>Two-letter ISO code.</Hint>
+        </div>
+        <div>
+          <Label>Workspace slug</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            value={slug}
+            placeholder="sysogen"
+            onChange={(e) => setSlug(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label>Requested pool size</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            value={poolSize}
+            inputMode="numeric"
+            placeholder="10"
+            onChange={(e) => setPoolSize(e.target.value.replace(/[^0-9]/g, ""))}
+          />
+          <Hint>How many proxy numbers you expect to need.</Hint>
+        </div>
+        <div>
+          <Label>Default session TTL (min)</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            value={ttl}
+            inputMode="numeric"
+            placeholder="120"
+            onChange={(e) => setTtl(e.target.value.replace(/[^0-9]/g, ""))}
+          />
+        </div>
+        <div>
+          <Label>Cooldown (min)</Label>
+          <input
+            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            value={cooldown}
+            inputMode="numeric"
+            placeholder="5"
+            onChange={(e) => setCooldown(e.target.value.replace(/[^0-9]/g, ""))}
+          />
+          <Hint>How long a released number rests before reallocation.</Hint>
+        </div>
       </div>
     </Card>
-  );
-}
-
-function ReadOnlyRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div>
-      <Label>{label}</Label>
-      <div
-        className={`h-9 px-3 border border-ink-200 rounded-md bg-bone-100 text-[13px] text-ink-700 flex items-center ${
-          mono ? "font-mono" : ""
-        }`}
-      >
-        {value}
-      </div>
-    </div>
   );
 }
 
