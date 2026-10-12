@@ -1,11 +1,13 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-store";
+import { useSidebar } from "@/lib/sidebar-store";
 
 export function Topbar() {
   const { user } = useAuth();
+  const { collapsed, openSidebar, toggleCollapsed } = useSidebar();
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ⌘K / Ctrl+K to focus the global search input.
@@ -21,8 +23,29 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="h-[52px] bg-paper border-b border-ink-200 px-4 flex items-center gap-4 flex-shrink-0">
-      <div className="relative flex-1 max-w-md">
+    <header className="h-[52px] bg-paper border-b border-ink-200 px-3 sm:px-4 flex items-center gap-2 sm:gap-4 flex-shrink-0">
+      {/* Two buttons rather than one that branches on viewport width: the
+          breakpoint is a CSS concern, and reading window.innerWidth during
+          render is not SSR-safe. Same slot, so it reads as one control. */}
+      <button
+        type="button"
+        onClick={openSidebar}
+        aria-label="Open navigation"
+        className="lg:hidden -ml-1 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-600 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className="hidden lg:flex -ml-1 p-2 items-center justify-center text-ink-600 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+      >
+        {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+      </button>
+
+      <div className="relative flex-1 min-w-0 max-w-md">
         <Search className="w-3.5 h-3.5 text-ink-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
         <input
           ref={searchRef}
@@ -35,11 +58,11 @@ export function Topbar() {
         </kbd>
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2 sm:gap-3 min-w-0">
         <ModeBadge />
 
         <button
-          className="p-2 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+          className="hidden sm:inline-flex p-2 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
           aria-label="Notifications"
         >
           <Bell className="w-4 h-4" />

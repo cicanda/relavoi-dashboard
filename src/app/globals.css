@@ -74,3 +74,12 @@ input::placeholder, textarea::placeholder { color: var(--color-ink-400); }
   background-size: 200px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* ── Mobile sidebar ────────────────────────────────────────────────────────
+   Only the transition lives here. The offset itself is set inline by the
+   component, gated on a matchMedia check, because every CSS-only form of the
+   toggle lost the cascade to Tailwind v4's utility layers. One inline
+   declaration cannot be overridden by anything. */
+.sidebar-panel {
+  transition: transform 200ms ease-in-out;
+}
