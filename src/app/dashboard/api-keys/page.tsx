@@ -1,9 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Copy, KeyRound, RefreshCw, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Check, Copy, KeyRound, RefreshCw, X } from "lucide-react";
 
-import { rotateApiKey } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  generateApiKeys,
+  getLiveRequirements,
+  activateLiveMode,
+  type LiveRequirement,
+} from "@/lib/api";
 import { fmtRelative } from "@/lib/format";
 import { useAuth } from "@/lib/auth-store";
 import { PageHeader } from "@/components/page-header";
@@ -197,10 +203,6 @@ export default function ApiKeysPage() {
   const toast = useToast();
 
   const [sdkTab, setSdkTab] = useState<SdkTab>("js");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [credsOpen, setCredsOpen] = useState(false);
-  const [rotating, setRotating] = useState(false);
-  const [creds, setCreds] = useState<{ apiKey: string; apiSecret: string } | null>(null);
 
   const tenantId = tenant?.id ?? "YOUR_TENANT_ID";
 
@@ -231,21 +233,6 @@ export default function ApiKeysPage() {
   const lastUsedLabel =
     fmtRelative(lastUsedAt) === "—" ? "never" : fmtRelative(lastUsedAt);
 
-  async function handleRotate() {
-    setRotating(true);
-    try {
-      const data = await rotateApiKey();
-      setCreds(data);
-      setConfirmOpen(false);
-      setCredsOpen(true);
-      toast.success("Credentials rotated");
-    } catch {
-      toast.error("Could not rotate credentials", "Please try again");
-    } finally {
-      setRotating(false);
-    }
-  }
-
   const activeSnippet =
     sdkTab === "js" ? jsSnippet : sdkTab === "kotlin" ? kotlinSnippet : swiftSnippet;
   const activeLang =
@@ -258,39 +245,7 @@ export default function ApiKeysPage() {
         description="Programmatic access to the Relavoi API"
       />
 
-      {/* Card 1 — API Credentials */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-ink-600" />
-              <h2 className="font-semibold text-ink-900">Live API Key</h2>
-            </div>
-            <p className="text-sm text-ink-500 mt-1">
-              Used by the SDK and any backend integration.
-            </p>
-
-            <div className="mt-4 flex items-center gap-2">
-              <code className="font-mono text-[13px] text-ink-700 bg-bone-100 border border-ink-200 rounded-md px-3 py-2">
-                {maskedKey}
-              </code>
-              <CopyButton text={maskedKey} />
-            </div>
-            <p className="text-xs text-ink-500 mt-2 font-mono">
-              Last used: {lastUsedLabel}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors inline-flex items-center gap-1.5 flex-shrink-0"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Rotate Credentials
-          </button>
-        </div>
-      </section>
+      <KeyCards />
 
       {/* Card 2 — SDK Quick Start */}
       <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
@@ -322,97 +277,180 @@ export default function ApiKeysPage() {
         <CodeBlock code={CURL_SNIPPET} language="bash" />
       </section>
 
-      {/* Confirm modal */}
-      {confirmOpen && (
-        <Modal onClose={() => (rotating ? undefined : setConfirmOpen(false))}>
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-9 h-9 rounded-md bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-4 h-4 text-red-700" />
+    </div>
+  );
+}
+
+// ─── Sandbox / live key management ──────────────────────────────────────────
+
+/**
+ * Two key sections. Sandbox is always available; live is gated behind
+ * activation, and the gate shows exactly what is still missing rather than a
+ * generic refusal -- a tenant who cannot go live should be able to see why
+ * without reading the docs.
+ */
+function KeyCards() {
+  const { tenant, setTenant } = useAuth();
+  const toast = useToast();
+  const qc = useQueryClient();
+
+  const [creds, setCreds] = useState<{ apiKey: string; apiSecret: string; mode: string } | null>(
+    null,
+  );
+
+  const reqQuery = useQuery({
+    queryKey: ["live-requirements"],
+    queryFn: getLiveRequirements,
+  });
+  const mode = reqQuery.data?.mode ?? tenant?.mode ?? "sandbox";
+  const requirements: LiveRequirement[] = reqQuery.data?.requirements ?? [];
+  const allMet = requirements.length > 0 && requirements.every((r) => r.met);
+
+  const genMut = useMutation({
+    mutationFn: (m: "sandbox" | "live") => generateApiKeys(m),
+    onSuccess: (data) => {
+      setCreds(data);
+      void qc.invalidateQueries({ queryKey: ["live-requirements"] });
+    },
+    onError: (err: unknown) => toast.error("Could not generate keys", extractError(err)),
+  });
+
+  const activateMut = useMutation({
+    mutationFn: activateLiveMode,
+    onSuccess: (data) => {
+      if (tenant) setTenant({ ...tenant, mode: data.mode });
+      toast.success("Live mode activated", "You can now generate live API keys.");
+      void qc.invalidateQueries({ queryKey: ["live-requirements"] });
+    },
+    onError: (err: unknown) => toast.error("Could not activate live mode", extractError(err)),
+  });
+
+  return (
+    <>
+      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
+        <div className="flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-ink-600" />
+          <h2 className="font-semibold text-ink-900">Sandbox keys</h2>
+          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 font-mono text-[10px] uppercase tracking-wider">
+            rk_test_
+          </span>
+        </div>
+        <p className="text-sm text-ink-500 mt-1">
+          Free. Sessions and webhooks behave normally, but no real calls are placed and nothing is
+          billed.
+        </p>
+        <button
+          type="button"
+          onClick={() => genMut.mutate("sandbox")}
+          disabled={genMut.isPending}
+          className="mt-4 bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+        >
+          {tenant?.hasSandboxKeys ? "Regenerate sandbox keys" : "Generate sandbox keys"}
+        </button>
+        {tenant?.hasSandboxKeys && (
+          <p className="text-xs text-ink-500 mt-2">
+            Regenerating immediately invalidates the previous sandbox key.
+          </p>
+        )}
+      </section>
+
+      <section
+        className={`bg-paper border rounded-[10px] shadow-card p-5 mb-5 ${
+          mode === "live" ? "border-ink-200" : "border-ink-200 opacity-90"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-ink-600" />
+          <h2 className="font-semibold text-ink-900">Live keys</h2>
+          <span className="px-1.5 py-0.5 rounded bg-signal-500/15 text-signal-700 font-mono text-[10px] uppercase tracking-wider">
+            rk_live_
+          </span>
+        </div>
+        <p className="text-sm text-ink-500 mt-1">
+          Routes through the carrier. Calls connect for real and are billed.
+        </p>
+
+        {mode === "live" ? (
+          <button
+            type="button"
+            onClick={() => genMut.mutate("live")}
+            disabled={genMut.isPending}
+            className="mt-4 bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+          >
+            {tenant?.hasLiveKeys ? "Regenerate live keys" : "Generate live keys"}
+          </button>
+        ) : (
+          <div className="mt-4">
+            <div className="text-[12px] font-medium text-ink-700 mb-2">
+              Before you can go live:
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-ink-900">
-                Rotate API credentials?
-              </h3>
-              <p className="text-sm text-ink-500 mt-1">
-                This will invalidate the current key. Any deployed integrations
-                will need the new key + secret to continue authenticating.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-5">
+            <ul className="space-y-1.5 mb-4">
+              {reqQuery.isLoading && <li className="text-sm text-ink-500">Checking…</li>}
+              {requirements.map((r) => (
+                <li key={r.key} className="flex items-start gap-2 text-sm">
+                  {r.met ? (
+                    <Check className="w-4 h-4 text-signal-600 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  )}
+                  <span className={r.met ? "text-ink-700" : "text-ink-600"}>{r.label}</span>
+                </li>
+              ))}
+            </ul>
             <button
               type="button"
-              disabled={rotating}
-              onClick={() => setConfirmOpen(false)}
-              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50"
+              onClick={() => activateMut.mutate()}
+              disabled={!allMet || activateMut.isPending}
+              className="bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={rotating}
-              onClick={handleRotate}
-              className="bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm disabled:opacity-50"
-            >
-              {rotating ? "Rotating..." : "Rotate (irreversible)"}
+              {activateMut.isPending ? "Activating…" : "Activate live mode"}
             </button>
           </div>
-        </Modal>
-      )}
+        )}
+      </section>
 
-      {/* Credentials modal */}
-      {credsOpen && creds && (
-        <Modal onClose={() => setCredsOpen(false)}>
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-9 h-9 rounded-md bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
-              <KeyRound className="w-4 h-4 text-amber-700" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-ink-900">
-                New credentials
-              </h3>
-              <p className="text-sm text-red-700 mt-1 font-medium">
-                Copy these now. The secret will not be shown again.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3 mt-4">
+      {creds && (
+        <Modal onClose={() => setCreds(null)}>
+          <h3 className="font-semibold text-ink-900">
+            {creds.mode === "live" ? "Live" : "Sandbox"} credentials
+          </h3>
+          <p className="text-sm text-ink-500 mt-1">
+            The secret is shown once and is not recoverable. Store it somewhere safe before closing.
+          </p>
+          <div className="mt-4 space-y-3">
             <div>
-              <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1">
-                API Key
-              </div>
+              <div className="text-[12px] font-medium text-ink-700 mb-1">API key</div>
               <div className="flex items-center gap-2">
-                <code className="font-mono text-[12px] text-ink-700 bg-bone-100 border border-ink-200 rounded-md px-3 py-2 flex-1 break-all">
+                <code className="font-mono text-[12px] bg-bone-100 border border-ink-200 rounded-md px-3 py-2 break-all flex-1">
                   {creds.apiKey}
                 </code>
                 <CopyButton text={creds.apiKey} />
               </div>
             </div>
             <div>
-              <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1">
-                API Secret
-              </div>
+              <div className="text-[12px] font-medium text-ink-700 mb-1">API secret</div>
               <div className="flex items-center gap-2">
-                <code className="font-mono text-[12px] text-ink-700 bg-bone-100 border border-ink-200 rounded-md px-3 py-2 flex-1 break-all">
+                <code className="font-mono text-[12px] bg-bone-100 border border-ink-200 rounded-md px-3 py-2 break-all flex-1">
                   {creds.apiSecret}
                 </code>
                 <CopyButton text={creds.apiSecret} />
               </div>
             </div>
           </div>
-
-          <div className="flex items-center justify-end mt-5">
-            <button
-              type="button"
-              onClick={() => setCredsOpen(false)}
-              className="bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 text-sm transition-colors"
-            >
-              I&apos;ve saved them
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setCreds(null)}
+            className="mt-5 bg-ink-900 text-paper px-4 h-9 rounded-md text-sm font-medium hover:bg-ink-800"
+          >
+            I've stored them
+          </button>
         </Modal>
       )}
-    </div>
+    </>
   );
+}
+
+function extractError(err: unknown): string {
+  const e = err as { response?: { data?: { detail?: string } }; message?: string };
+  return e?.response?.data?.detail ?? e?.message ?? "Something went wrong.";
 }

@@ -31,6 +31,10 @@ export interface Tenant {
   requestedPoolSize?: number | null;
   defaultSessionTtlMin?: number | null;
   cooldownMin?: number | null;
+  /** Sandbox until the workspace is explicitly activated for live traffic. */
+  mode?: "sandbox" | "live";
+  hasSandboxKeys?: boolean;
+  hasLiveKeys?: boolean;
   /** False until the tenant generates credentials from the API keys page. */
   hasApiCredentials?: boolean;
   createdAt?: string;

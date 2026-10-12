@@ -36,10 +36,7 @@ export function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-signal-500/15 text-signal-700 rounded-md font-mono text-[11px] uppercase tracking-wider">
-          <span className="w-1.5 h-1.5 rounded-full bg-signal-500 animate-pulse-dot" />
-          Live mode
-        </span>
+        <ModeBadge />
 
         <button
           className="p-2 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
@@ -52,5 +49,34 @@ export function Topbar() {
         <div className="text-xs text-ink-500 hidden sm:block">{user?.email ?? ""}</div>
       </div>
     </header>
+  );
+}
+
+/**
+ * Which mode the workspace is in. Sandbox is the default for every new
+ * workspace, so this is the common case rather than an error state: amber, not
+ * red, and worded as a state rather than a warning.
+ */
+function ModeBadge() {
+  const { tenant } = useAuth();
+  const live = tenant?.mode === "live";
+  return (
+    <span
+      title={
+        live
+          ? "Live mode. API calls route through the carrier and are billed."
+          : "Sandbox mode. API calls are free and no real calls are placed."
+      }
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md font-mono text-[11px] uppercase tracking-wider ${
+        live ? "bg-signal-500/15 text-signal-700" : "bg-amber-500/15 text-amber-700"
+      }`}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          live ? "bg-signal-500 animate-pulse-dot" : "bg-amber-500"
+        }`}
+      />
+      {live ? "Live" : "Sandbox"}
+    </span>
   );
 }

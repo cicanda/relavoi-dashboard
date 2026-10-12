@@ -109,6 +109,34 @@ export async function rotateApiKey() {
   return data;
 }
 
+export interface LiveRequirement {
+  key: string;
+  label: string;
+  met: boolean;
+}
+
+export async function generateApiKeys(mode: "sandbox" | "live") {
+  const { data } = await api.post<{ apiKey: string; apiSecret: string; mode: string }>(
+    "/auth/keys/generate",
+    { mode },
+  );
+  return data;
+}
+
+export async function getLiveRequirements() {
+  const { data } = await api.get<{ mode: "sandbox" | "live"; requirements: LiveRequirement[] }>(
+    "/auth/keys/requirements",
+  );
+  return data;
+}
+
+export async function activateLiveMode() {
+  const { data } = await api.post<{ mode: "live"; requirements: LiveRequirement[] }>(
+    "/auth/keys/activate-live",
+  );
+  return data;
+}
+
 // ─── Tenant ───────────────────────────────────────────────────────────────────
 export async function getMe() {
   const { data } = await api.get<{ tenant: Tenant; user?: TenantUser }>("/tenants/me");

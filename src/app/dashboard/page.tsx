@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
-  PhoneCall,
-  Clock,
-  MessageSquare,
-  ArrowLeftRight,
   ArrowLeft,
+  ArrowLeftRight,
   ArrowRight,
   ChevronRight,
+  Clock,
+  FlaskConical,
+  MessageSquare,
+  PhoneCall,
 } from "lucide-react";
 
 import { listSessions, listCalls, getConfig } from "@/lib/api";
@@ -134,6 +135,8 @@ export default function OverviewPage() {
 
   return (
     <div>
+      <SandboxBanner />
+
       {/* Greeting bar */}
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
@@ -346,6 +349,27 @@ function ConfigRow({
       >
         {value}
       </dd>
+    </div>
+  );
+}
+
+/**
+ * Shown only while the workspace is sandboxed. Deliberately informational
+ * rather than an alert: sandbox is the normal starting state, not a misconfig.
+ */
+function SandboxBanner() {
+  const { tenant } = useAuth();
+  if (tenant?.mode === "live") return null;
+  return (
+    <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+      <FlaskConical className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
+      <div className="text-[13px] text-ink-700">
+        You&apos;re in sandbox mode. API calls are free and no real calls are placed.{" "}
+        <Link href="/dashboard/api-keys" className="font-medium text-ink-900 underline">
+          Activate live mode
+        </Link>{" "}
+        when you&apos;re ready.
+      </div>
     </div>
   );
 }
