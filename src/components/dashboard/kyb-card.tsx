@@ -720,7 +720,20 @@ export function KybPromptModal({
 
 // href is null for roles that cannot act on it: a nudge with a dead link is
 // worse than a nudge with none.
-export function KybBanner({ state, href }: { state: KybState; href: string | null }) {
+//
+// `sandbox` folds the sandbox-mode notice into this same bar. Both notices say
+// something about not being live yet, and stacking two of them turns the top of
+// every page into a wall. Verification comes first because it is the thing
+// standing in the way; the sandbox note follows as context.
+export function KybBanner({
+  state,
+  href,
+  sandbox = false,
+}: {
+  state: KybState;
+  href: string | null;
+  sandbox?: boolean;
+}) {
   if (state.status === "APPROVED") return null;
 
   const copy =
@@ -754,6 +767,18 @@ export function KybBanner({ state, href }: { state: KybState; href: string | nul
         <a href={href} className="font-medium underline hover:no-underline">
           {copy.link}
         </a>
+      )}
+      {sandbox && (
+        <>
+          {/* Hidden once the bar wraps, where the rule is orphaned at the end
+              of a line instead of sitting between the two messages. */}
+          <span aria-hidden="true" className="hidden sm:inline opacity-40">
+            |
+          </span>
+          <span className="min-w-0 opacity-90">
+            Sandbox calls are free and never placed.
+          </span>
+        </>
       )}
     </div>
   );

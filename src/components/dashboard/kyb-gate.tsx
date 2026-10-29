@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { dismissKybPrompt, getKyb } from "@/lib/api";
+import { useAuth } from "@/lib/auth-store";
 import { KybBanner, KybPromptModal } from "@/components/dashboard/kyb-card";
 
 const VERIFICATION_HREF = "/dashboard/settings#business-verification";
@@ -23,6 +24,7 @@ const VERIFICATION_HREF = "/dashboard/settings#business-verification";
 export function KybGate() {
   const router = useRouter();
   const qc = useQueryClient();
+  const { tenant } = useAuth();
 
   const q = useQuery({
     queryKey: ["kyb"],
@@ -73,5 +75,28 @@ export function KybGate() {
     );
   }
 
-  return <KybBanner state={state} href={state.canSubmit ? VERIFICATION_HREF : null} />;
+  return (
+    <KybBanner
+      state={state}
+      href={state.canSubmit ? VERIFICATION_HREF : null}
+      sandbox={tenant?.mode !== "live"}
+    />
+  );
+}
+
+/**
+ * Whether the merged bar above is currently carrying the sandbox notice.
+ *
+ * The overview page has its own sandbox banner; it asks this so the two do
+ * not both render. Reads the same cached query the gate does, so it costs no
+ * extra request and cannot disagree with what is on screen.
+ */
+export function useKybBannerCarriesSandboxNote(): boolean {
+  const q = useQuery({ queryKey: ["kyb"], queryFn: getKyb, staleTime: 60_000, retry: false });
+  const state = q.data;
+  if (!state) return false;
+  // The modal is an overlay, not the bar, so the overview keeps its own
+  // banner while the modal is up.
+  if (state.showPrompt) return false;
+  return state.status !== "APPROVED";
 }

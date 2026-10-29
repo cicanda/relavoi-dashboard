@@ -18,6 +18,7 @@ import {
 
 import { listSessions, listCalls, getConfig } from "@/lib/api";
 import { useAuth } from "@/lib/auth-store";
+import { useKybBannerCarriesSandboxNote } from "@/components/dashboard/kyb-gate";
 import { truncId, fmtRelative, fmtNumber } from "@/lib/format";
 import { StatCard } from "@/components/stat-card";
 import { StatePill } from "@/components/state-pill";
@@ -359,7 +360,11 @@ function ConfigRow({
  */
 function SandboxBanner() {
   const { tenant } = useAuth();
+  // The verification bar in the layout folds this notice in when it is showing,
+  // so rendering here too would stack two bars saying the same thing.
+  const mergedIntoKybBanner = useKybBannerCarriesSandboxNote();
   if (tenant?.mode === "live") return null;
+  if (mergedIntoKybBanner) return null;
   return (
     <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-4 py-3">
       <FlaskConical className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
