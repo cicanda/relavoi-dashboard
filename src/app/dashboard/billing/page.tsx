@@ -295,7 +295,7 @@ export default function BillingPage() {
               <div className="pt-4 text-sm text-ink-500">No pricing data available.</div>
             ) : (
               <div className="space-y-5 pt-4">
-                {(["STARTER", "GROWTH", "ENTERPRISE"] as Tier[])
+                {(["STARTER", "GROWTH", "SCALE", "ENTERPRISE"] as Tier[])
                   .filter((t) => pricingByTier[t])
                   .map((t) => {
                     const rows = pricingByTier[t];

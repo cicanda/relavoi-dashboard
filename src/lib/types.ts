@@ -7,7 +7,7 @@
 export type SessionState = "PENDING" | "ACTIVE" | "GRACE_PERIOD" | "EXPIRED" | "FAILED";
 export type DirectionMode = "BIDIRECTIONAL" | "A_TO_B_ONLY" | "B_TO_A_ONLY";
 export type ConsentPrompt = "DEFAULT" | "CUSTOM" | "NONE";
-export type Tier = "STARTER" | "GROWTH" | "ENTERPRISE";
+export type Tier = "STARTER" | "GROWTH" | "SCALE" | "ENTERPRISE";
 export type Role = "OWNER" | "ADMIN" | "DEVELOPER" | "VIEWER";
 
 export interface Tenant {

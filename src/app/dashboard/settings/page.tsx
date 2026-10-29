@@ -259,6 +259,7 @@ function TierBadge({ tier }: { tier: Tier }) {
   const styles: Record<Tier, string> = {
     STARTER: "bg-bone-200 text-ink-700",
     GROWTH: "bg-blue-500/15 text-blue-700",
+    SCALE: "bg-violet-500/15 text-violet-700",
     ENTERPRISE: "bg-signal-500/20 text-signal-700",
   };
   return (
