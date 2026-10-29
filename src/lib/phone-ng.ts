@@ -2,8 +2,8 @@
  * Nigerian mobile numbers, as people actually type them.
  *
  * A seller entering a rider's number types it the way it is printed on a
- * sticker or saved in their phone: 08134132644, sometimes 8134132644, and
- * occasionally +234 813 413 2644. The API takes E.164 only, so the dashboard
+ * sticker or saved in their phone: 08012345678, sometimes 8012345678, and
+ * occasionally +234 801 234 5678. The API takes E.164 only, so the dashboard
  * converts rather than scolding, and only refuses what cannot be a Nigerian
  * mobile number at all.
  */
@@ -24,7 +24,7 @@ export interface NormalisedPhone {
   problem: string | null;
 }
 
-export const NG_EXAMPLE = "08134132644";
+export const NG_EXAMPLE = "08012345678";
 
 /**
  * Read an input as a Nigerian mobile number.
