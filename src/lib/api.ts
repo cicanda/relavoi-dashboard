@@ -280,3 +280,123 @@ export async function inviteUser(email: string, role: "OWNER" | "ADMIN" | "VIEWE
   );
   return data;
 }
+
+// ─── Business verification (KYB) ──────────────────────────────────────────────
+
+export type KybStatus = "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
+
+export type KybDocumentKind =
+  | "REGISTRATION_CERTIFICATE"
+  | "STATUS_REPORT"
+  | "MEMART"
+  | "OWNER_ID"
+  | "PROOF_OF_ADDRESS"
+  | "OTHER";
+
+export interface KybDocument {
+  id: string;
+  kind: KybDocumentKind;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  sha256: string;
+  uploadedAt: string;
+  uploadedBy: string | null;
+}
+
+export interface KybDetails {
+  registrationType: "COMPANY" | "BUSINESS_NAME" | "OTHER" | null;
+  legalName: string | null;
+  registrationNumber: string | null;
+  registeredAddress: string | null;
+  city: string | null;
+  state: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  website: string | null;
+}
+
+export interface KybState {
+  status: KybStatus;
+  editable: boolean;
+  details: KybDetails;
+  documents: KybDocument[];
+  requiredKinds: KybDocumentKind[];
+  missingKinds: KybDocumentKind[];
+  missingDetails: string[];
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  canSubmit: boolean;
+  promptDismissedAt: string | null;
+  showPrompt: boolean;
+}
+
+export async function getKyb() {
+  const { data } = await api.get<KybState>("/kyb");
+  return data;
+}
+
+export type KybDetailsPayload = {
+  registrationType: "COMPANY" | "BUSINESS_NAME" | "OTHER";
+  legalName: string;
+  registrationNumber: string;
+  registeredAddress: string;
+  city?: string | null;
+  state: string;
+  contactName: string;
+  contactPhone: string;
+  website?: string | null;
+};
+
+export async function putKybDetails(payload: KybDetailsPayload) {
+  const { data } = await api.put<Partial<KybState>>("/kyb/details", payload);
+  return data;
+}
+
+/**
+ * Upload one document. `onProgress` receives 0-100 so the caller can show a
+ * per-file bar; it is driven by axios upload events, so it reflects bytes put
+ * on the wire rather than a fake animation.
+ */
+export async function uploadKybDocument(
+  kind: KybDocumentKind,
+  file: File,
+  onProgress?: (percent: number) => void,
+) {
+  const form = new FormData();
+  // Field before file, so a server reading parts in order has the kind in hand
+  // by the time the bytes arrive.
+  form.append("kind", kind);
+  form.append("file", file, file.name);
+
+  const { data } = await api.post<KybDocument>("/kyb/documents", form, {
+    // Let the browser set the multipart boundary.
+    headers: { "Content-Type": undefined as unknown as string },
+    // Documents are up to 10 MB and Nigerian uplinks are not fast.
+    timeout: 120_000,
+    onUploadProgress: (e) => {
+      if (!onProgress) return;
+      const total = e.total ?? file.size;
+      if (!total) return;
+      onProgress(Math.min(100, Math.round((e.loaded / total) * 100)));
+    },
+  });
+  return data;
+}
+
+export async function deleteKybDocument(id: string) {
+  await api.delete(`/kyb/documents/${id}`);
+}
+
+export async function submitKyb() {
+  const { data } = await api.post<{ status: KybStatus; submittedAt: string }>("/kyb/submit");
+  return data;
+}
+
+export async function dismissKybPrompt() {
+  const { data } = await api.post<{ promptDismissedAt: string; showPrompt: false }>(
+    "/kyb/prompt/dismiss",
+  );
+  return data;
+}

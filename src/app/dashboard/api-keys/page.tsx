@@ -393,7 +393,20 @@ function KeyCards() {
                   ) : (
                     <X className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                   )}
-                  <span className={r.met ? "text-ink-700" : "text-ink-600"}>{r.label}</span>
+                  <span
+                    className={`${r.met ? "text-ink-700" : "text-ink-600"} flex flex-wrap items-center gap-x-2 min-w-0`}
+                  >
+                    <span className="min-w-0">{r.label}</span>
+                    {/* Verification is the one requirement with somewhere to go. */}
+                    {r.key === "kyb_approved" && !r.met && (
+                      <a
+                        href="/dashboard/settings#business-verification"
+                        className="font-medium text-signal-600 underline hover:no-underline"
+                      >
+                        Verify your business
+                      </a>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

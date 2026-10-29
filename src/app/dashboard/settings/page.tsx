@@ -6,6 +6,7 @@ import { Check, Copy, X } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/lib/auth-store";
 import { useToast } from "@/components/toast";
+import { BusinessVerificationCard } from "@/components/dashboard/kyb-card";
 import {
   changePassword,
   getConfig,
@@ -109,6 +110,10 @@ export default function SettingsPage() {
 
       <div className="space-y-5">
         <GeneralCard tenant={tenant} onSave={(patch) => patchMut.mutate(patch)} saving={patchMut.isPending} />
+
+        {/* Verification sits high up: it is the one thing standing between a
+            new workspace and live calls. */}
+        <BusinessVerificationCard canManage={canManageTeam} />
 
         {canManageTeam && <TeamCard />}
 
