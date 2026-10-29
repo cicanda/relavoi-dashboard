@@ -2,23 +2,25 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowLeftRight,
   ArrowRight,
   Check,
   ChevronDown,
+  ChevronRight,
   Copy,
   Plus,
   Activity as ActivityIcon,
 } from "lucide-react";
 
 import { listSessions } from "@/lib/api";
+import { useAuth } from "@/lib/auth-store";
 import { fmtAbsolute, fmtRelative, truncId } from "@/lib/format";
+import { CreateSessionDialog } from "@/components/dashboard/session-dialogs";
 import { PageHeader } from "@/components/page-header";
 import { StatePill } from "@/components/state-pill";
-import { SkeletonRow } from "@/components/skeleton";
 import { useToast } from "@/components/toast";
 import type { DirectionMode, Session, SessionState } from "@/lib/types";
 
@@ -80,9 +82,21 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+/** The order reference a seller typed, if they typed one. */
+function referenceOf(s: Session): string | null {
+  const ref = s.metadata?.reference;
+  return typeof ref === "string" && ref.trim() ? ref.trim() : null;
+}
+
 export default function SessionsListPage() {
   const router = useRouter();
   const toast = useToast();
+  const qc = useQueryClient();
+  const { user, tenant } = useAuth();
+  // A viewer is here to read reports, not to put two people on a call.
+  const canWrite = user?.role !== "VIEWER";
+
+  const [createOpen, setCreateOpen] = useState(false);
   const [stateFilter, setStateFilter] = useState<string>("");
   const [period, setPeriod] = useState<Period>("all");
   const [pages, setPages] = useState<Array<{ data: Session[]; after?: string | null }>>([]);
@@ -144,10 +158,7 @@ export default function SessionsListPage() {
   const canLoadMore = !!lastAfter && !q.isFetching;
   const isLoadingFirstPage = q.isLoading && pages.length === 0;
   const isEmpty = !isLoadingFirstPage && rows.length === 0 && !q.error;
-
-  function onCreateSession() {
-    toast.info("Create-session UI coming soon", "Use the API directly for now");
-  }
+  const open = (id: string) => router.push(`/dashboard/sessions/${id}`);
 
   return (
     <div>
@@ -155,12 +166,14 @@ export default function SessionsListPage() {
         title="Sessions"
         description="All masking sessions for your workspace"
         actions={
-          <button
-            onClick={onCreateSession}
-            className="bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm inline-flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" /> Create session
-          </button>
+          canWrite ? (
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> New session
+            </button>
+          ) : null
         }
       />
 
@@ -206,94 +219,108 @@ export default function SessionsListPage() {
         </div>
       </div>
 
-      {/* Table card */}
+      {/* Rows.
+          Below sm the table becomes stacked cards. The desktop view carries
+          nine columns, and on a phone that is either a sideways scroll or
+          unreadable -- unacceptable for the screen a seller runs a delivery
+          from. The states around the rows (loading, error, empty) are rendered
+          once and work at any width. */}
       <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr>
-                {[
-                  "Session ID",
-                  "Proxy",
-                  "Status",
-                  "Dir",
-                  "Calls",
-                  "Created",
-                  "Expires",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoadingFirstPage ? (
-                Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={7} />)
-              ) : q.error && rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-10 border-t border-ink-200 text-center text-sm"
-                  >
-                    <div className="text-red-700 mb-2">Failed to load sessions</div>
-                    <button
-                      onClick={() => q.refetch()}
-                      className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
-                    >
-                      Retry
-                    </button>
-                  </td>
-                </tr>
-              ) : isEmpty ? (
-                <tr>
-                  <td colSpan={7} className="border-t border-ink-200">
-                    <EmptyState />
-                  </td>
-                </tr>
-              ) : (
-                rows.map((s) => (
-                  <tr
-                    key={s.id}
-                    onClick={() => router.push(`/dashboard/sessions/${s.id}`)}
-                    className="group cursor-pointer hover:bg-bone-100 transition-colors"
-                  >
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
-                      <div className="flex items-center gap-1">
-                        <span className="font-mono">{truncId(s.id)}</span>
-                        <CopyButton text={s.id} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
-                      {s.proxyNumber}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
-                      <StatePill state={s.state as SessionState} size="sm" />
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
-                      <DirectionIcon mode={s.directionMode} />
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
-                      {s.callCount ?? 0}
-                    </td>
-                    <td
-                      className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
-                      title={fmtAbsolute(s.createdAt)}
-                    >
-                      {fmtRelative(s.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
-                      {fmtRelative(s.expiresAt)}
-                    </td>
+        {isLoadingFirstPage ? (
+          <LoadingRows />
+        ) : q.error && rows.length === 0 ? (
+          <div className="px-4 py-10 text-center text-sm">
+            <div className="text-red-700 mb-2">Failed to load sessions</div>
+            <button
+              onClick={() => q.refetch()}
+              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isEmpty ? (
+          <EmptyState canWrite={canWrite} onCreate={() => setCreateOpen(true)} />
+        ) : (
+          <>
+            {/* Phones */}
+            <div className="sm:hidden divide-y divide-ink-200">
+              {rows.map((s) => (
+                <SessionCard key={s.id} session={s} onOpen={() => open(s.id)} />
+              ))}
+            </div>
+
+            {/* Tablet and up */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    {[
+                      "Session ID",
+                      "Reference",
+                      "Proxy",
+                      "Customer",
+                      "Status",
+                      "Dir",
+                      "Calls",
+                      "Created",
+                      "Expires",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2 whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {rows.map((s) => (
+                    <tr
+                      key={s.id}
+                      onClick={() => open(s.id)}
+                      className="group cursor-pointer hover:bg-bone-100 transition-colors"
+                    >
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono">{truncId(s.id)}</span>
+                          <CopyButton text={s.id} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 max-w-[180px] truncate">
+                        {referenceOf(s) ?? <span className="text-ink-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono whitespace-nowrap">
+                        {s.proxyNumber}
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono whitespace-nowrap">
+                        {s.customerPhoneMasked ?? <span className="text-ink-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
+                        <StatePill state={s.state as SessionState} size="sm" />
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                        <DirectionIcon mode={s.directionMode} />
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                        {s.callCount ?? 0}
+                      </td>
+                      <td
+                        className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 whitespace-nowrap"
+                        title={fmtAbsolute(s.createdAt)}
+                      >
+                        {fmtRelative(s.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 whitespace-nowrap">
+                        {fmtRelative(s.expiresAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
 
         {/* Load more */}
         {(canLoadMore || q.isFetching) && rows.length > 0 && (
@@ -310,11 +337,70 @@ export default function SessionsListPage() {
           </div>
         )}
       </div>
+
+      {createOpen && (
+        <CreateSessionDialog
+          sandbox={tenant?.mode !== "live"}
+          onClose={() => setCreateOpen(false)}
+          onOpenSession={(session) => {
+            setCreateOpen(false);
+            void qc.invalidateQueries({ queryKey: ["sessions"] });
+            open(session.id);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function EmptyState() {
+/** One session as a card, for phone widths. */
+function SessionCard({ session, onOpen }: { session: Session; onOpen: () => void }) {
+  const reference = referenceOf(session);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full text-left px-4 py-3.5 active:bg-bone-100 transition-colors"
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-ink-900 truncate">
+          {reference ?? <span className="font-mono text-[13px]">{truncId(session.id)}</span>}
+        </span>
+        <StatePill state={session.state as SessionState} size="sm" />
+        <ChevronRight className="w-4 h-4 text-ink-400 ml-auto shrink-0" />
+      </div>
+      <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">Number</span>
+        <span className="text-[15px] font-mono text-ink-900">{session.proxyNumber}</span>
+      </div>
+      <div className="mt-1 flex items-baseline gap-2 flex-wrap text-[13px]">
+        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">
+          Customer
+        </span>
+        <span className="font-mono text-ink-700">{session.customerPhoneMasked ?? "—"}</span>
+      </div>
+      <div className="mt-2 text-[12px] text-ink-500">
+        {session.callCount ?? 0} {(session.callCount ?? 0) === 1 ? "call" : "calls"} ·{" "}
+        {fmtRelative(session.createdAt)}
+      </div>
+    </button>
+  );
+}
+
+function LoadingRows() {
+  return (
+    <div className="divide-y divide-ink-200">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="px-4 py-4">
+          <div className="h-4 w-40 rounded animate-shimmer mb-2" />
+          <div className="h-3 w-56 rounded animate-shimmer" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ canWrite, onCreate }: { canWrite: boolean; onCreate: () => void }) {
   return (
     <div className="px-4 py-16 flex flex-col items-center text-center">
       <div className="w-16 h-16 rounded-full bg-bone-100 flex items-center justify-center mb-4">
@@ -322,8 +408,16 @@ function EmptyState() {
       </div>
       <h3 className="text-base font-semibold text-ink-900 mb-1">No sessions yet</h3>
       <p className="text-sm text-ink-500 max-w-md">
-        Sessions will appear here as your integration creates them.
+        Start one here, or let your integration create them.
       </p>
+      {canWrite && (
+        <button
+          onClick={onCreate}
+          className="mt-5 bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm inline-flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" /> New session
+        </button>
+      )}
     </div>
   );
 }

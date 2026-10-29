@@ -53,6 +53,12 @@ export interface Session {
   id: string;
   tenantId: string;
   proxyNumber: string;
+  /**
+   * Both parties, masked: +234******1234. The API never returns the numbers
+   * themselves, and null means the session predates the stored digits.
+   */
+  agentPhoneMasked?: string | null;
+  customerPhoneMasked?: string | null;
   state: SessionState;
   directionMode: DirectionMode;
   metadata: Record<string, unknown>;

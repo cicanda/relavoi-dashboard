@@ -3,6 +3,7 @@
 import axios, { AxiosError, type AxiosInstance } from "axios";
 import { readPersistedToken } from "./auth-store";
 import type {
+  DirectionMode,
   Tenant,
   TenantUser,
   Session,
@@ -51,6 +52,71 @@ api.interceptors.response.use(
     return Promise.reject(err);
   },
 );
+
+// ─── Problem details (RFC 7807) ───────────────────────────────────────────────
+/**
+ * The backend answers every failure with `application/problem+json`, and its
+ * `detail` is written to be read by a person. So the dashboard shows it rather
+ * than inventing its own wording, and only overrides the cases where the
+ * server has to speak in terms of the API and a seller needs the plain version
+ * ("no number available" means nothing to someone who never provisioned one).
+ */
+export interface ProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+}
+
+export function problemOf(err: unknown): ProblemDetails | null {
+  const res = (err as AxiosError | undefined)?.response;
+  if (!res) return null;
+  const data = res.data as ProblemDetails | undefined;
+  const problem: ProblemDetails = data && typeof data === "object" ? { ...data } : {};
+  problem.status = problem.status ?? res.status;
+  return problem;
+}
+
+/** The trailing slug of a problem `type` URL, e.g. ".../errors/pool-exhausted". */
+function problemSlug(problem: ProblemDetails | null): string | null {
+  if (!problem?.type) return null;
+  const parts = problem.type.split("/").filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : null;
+}
+
+const PLAIN_MESSAGES: Record<string, string> = {
+  "tier-session-limit":
+    "You have as many sessions open as your plan allows. End one you have finished with, or move to a bigger plan.",
+  "pool-exhausted":
+    "No Relavoi number is free at the moment. End a session you have finished with, or try again shortly.",
+  "target-conflict":
+    "That customer is already on another open session using this number. End that one first.",
+  "invalid-target": "That number cannot be used here.",
+  "session-expired": "This session has already ended.",
+  "tenant-suspended": "This workspace is suspended. Contact support.",
+  forbidden: "Your role cannot change sessions. Ask an owner or an admin to do it.",
+};
+
+/**
+ * What to put in front of the user when a request fails.
+ *
+ * Order: a plain rewrite where we have one, then the server's own detail, then
+ * the caller's fallback. A network failure has no problem document at all,
+ * which is the one case worth naming separately.
+ */
+export function problemMessage(err: unknown, fallback: string): string {
+  const problem = problemOf(err);
+  if (!problem) {
+    return "Could not reach Relavoi. Check your connection and try again.";
+  }
+  const slug = problemSlug(problem);
+  if (slug && PLAIN_MESSAGES[slug]) return PLAIN_MESSAGES[slug];
+  // A validation failure quotes a schema at us; that is not for a seller to read.
+  if (slug === "validation" || slug === "session-create-failed") {
+    return problem.status === 400 ? fallback : (problem.detail ?? fallback);
+  }
+  return problem.detail?.trim() || fallback;
+}
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export interface DashboardLoginResponse {
@@ -168,8 +234,31 @@ export async function getSession(id: string) {
   return data;
 }
 
-export async function endSession(id: string) {
-  const { data } = await api.post<Session>(`/sessions/${id}/end`);
+export interface CreateSessionPayload {
+  agentPhone: string;
+  customerPhone: string;
+  metadata?: Record<string, unknown>;
+  directionMode?: DirectionMode;
+}
+
+export async function createSession(payload: CreateSessionPayload) {
+  const { data } = await api.post<Session>("/sessions", payload);
+  return data;
+}
+
+/**
+ * End a session. `gracePeriodMinutes: 0` cuts contact off at once; omitting it
+ * leaves the workspace's own grace period in force.
+ */
+export async function endSession(id: string, opts: { gracePeriodMinutes?: number } = {}) {
+  const body = opts.gracePeriodMinutes === undefined ? {} : { gracePeriodMinutes: opts.gracePeriodMinutes };
+  const { data } = await api.post<Session>(`/sessions/${id}/end`, body);
+  return data;
+}
+
+/** Repoint an open session at a different customer, keeping the same number. */
+export async function swapSessionTarget(id: string, customerPhone: string) {
+  const { data } = await api.patch<Session>(`/sessions/${id}/target`, { customerPhone });
   return data;
 }
 

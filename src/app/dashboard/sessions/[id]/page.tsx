@@ -11,7 +11,7 @@ import {
   Check,
   Copy,
   Lock,
-  X,
+  UserRoundPen,
 } from "lucide-react";
 import type { AxiosError } from "axios";
 
@@ -20,12 +20,18 @@ import {
   getSession,
   listSessionCalls,
   listSessionSms,
+  problemMessage,
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth-store";
 import {
   fmtAbsolute,
   fmtDuration,
   fmtRelative,
 } from "@/lib/format";
+import {
+  ChangeCustomerDialog,
+  EndSessionDialog,
+} from "@/components/dashboard/session-dialogs";
 import { StatePill } from "@/components/state-pill";
 import { SkeletonRow } from "@/components/skeleton";
 import { useToast } from "@/components/toast";
@@ -69,10 +75,15 @@ export default function SessionDetailPage({
   const { id } = use(params);
   const toast = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  // Reading a session is open to everyone; changing one is not.
+  const canWrite = user?.role !== "VIEWER";
 
   const [tab, setTab] = useState<"calls" | "sms">("calls");
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
+  const [changeOpen, setChangeOpen] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState<string | null>(null);
   const [metaOpen, setMetaOpen] = useState(false);
 
   const sessionQ = useQuery({
@@ -113,16 +124,20 @@ export default function SessionDetailPage({
     if (smsQ.error) showErrorOnce("sms", "Could not load SMS for this session");
   }, [smsQ.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function onConfirmEnd() {
+  async function onConfirmEnd(gracePeriodMinutes: number | undefined) {
     setEnding(true);
+    setEndError(null);
     try {
-      await endSession(id);
-      toast.success("Session ended");
+      await endSession(id, { gracePeriodMinutes });
+      toast.success(
+        gracePeriodMinutes === 0 ? "Session ended, contact cut off" : "Session ended",
+      );
       await qc.invalidateQueries({ queryKey: ["session", id] });
       await qc.invalidateQueries({ queryKey: ["sessions"] });
-      setConfirmOpen(false);
-    } catch {
-      toast.error("Failed to end session");
+      setEndOpen(false);
+    } catch (err) {
+      // Shown inside the dialog: the choice that failed is still on screen.
+      setEndError(problemMessage(err, "Could not end the session. Try again."));
     } finally {
       setEnding(false);
     }
@@ -162,7 +177,17 @@ export default function SessionDetailPage({
   }
 
   const s = sessionQ.data as Session;
-  const canEnd = s.state === "ACTIVE" || s.state === "GRACE_PERIOD";
+  // The same rule the call router applies: a session in grace whose expiry has
+  // passed is dead, whatever its state column still says until the expiry
+  // worker sweeps it. Offering to end it, or to retarget it, would be offering
+  // something the router would refuse.
+  const expiresAtMs = Date.parse(s.expiresAt);
+  const stillLive =
+    (s.state === "ACTIVE" || s.state === "GRACE_PERIOD") &&
+    (!Number.isFinite(expiresAtMs) || expiresAtMs > Date.now());
+  const rawReference = s.metadata?.reference;
+  const reference =
+    typeof rawReference === "string" && rawReference.trim() ? rawReference.trim() : null;
 
   return (
     <div>
@@ -184,23 +209,44 @@ export default function SessionDetailPage({
             <span className="text-lg font-mono text-ink-900">{s.proxyNumber}</span>
             <CopyButton text={s.proxyNumber} />
           </div>
-          {canEnd && (
-            <button
-              onClick={() => setConfirmOpen(true)}
-              className="ml-auto bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm"
-            >
-              End Session
-            </button>
+          {canWrite && stillLive && (
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setChangeOpen(true)}
+                className="bg-paper border border-ink-200 text-ink-700 px-4 h-10 rounded-md hover:bg-bone-100 font-medium text-sm inline-flex items-center gap-1.5"
+              >
+                <UserRoundPen className="w-4 h-4" /> Change customer
+              </button>
+              <button
+                onClick={() => {
+                  setEndError(null);
+                  setEndOpen(true);
+                }}
+                className="bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm"
+              >
+                End session
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Config grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b border-ink-200">
+        {/* Config grid. The two party numbers come first: on a session someone
+            started by hand, they are what identifies it. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <Block label="Order reference" value={reference ?? "—"} />
+          <Block label="Rider / agent" value={s.agentPhoneMasked ?? "—"} />
+          <Block label="Customer" value={s.customerPhoneMasked ?? "—"} />
           <Block label="Direction Mode" value={s.directionMode} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Block label="Recording" value={s.recordingEnabled ? "Enabled" : "Disabled"} />
           <Block label="Consent Mode" value={s.consentPrompt} />
           <Block label="Grace Period (min)" value={String(s.gracePeriodMinutes)} />
         </div>
+        <p className="text-[12px] text-ink-500 mb-6 pb-6 border-b border-ink-200">
+          Both numbers are masked. Relavoi stores the last four digits for display and nothing
+          more of either number is ever shown back.
+        </p>
 
         {/* Timeline */}
         <Timeline session={s} />
@@ -248,16 +294,26 @@ export default function SessionDetailPage({
         )}
       </div>
 
-      {/* Confirm modal */}
-      {confirmOpen && (
-        <ConfirmModal
-          title="End this session?"
-          description="The session will move to GRACE_PERIOD and ultimately EXPIRED. Active calls already in progress will complete; no new calls will be routed after the grace window."
-          confirmLabel={ending ? "Ending..." : "End Session"}
-          danger
-          disabled={ending}
-          onCancel={() => !ending && setConfirmOpen(false)}
+      {endOpen && (
+        <EndSessionDialog
+          graceMinutes={s.gracePeriodMinutes}
+          busy={ending}
+          error={endError}
+          onCancel={() => !ending && setEndOpen(false)}
           onConfirm={onConfirmEnd}
+        />
+      )}
+
+      {changeOpen && (
+        <ChangeCustomerDialog
+          sessionId={id}
+          onCancel={() => setChangeOpen(false)}
+          onChanged={async (updated) => {
+            setChangeOpen(false);
+            toast.success("Customer changed", `Now ${updated.customerPhoneMasked ?? "updated"}`);
+            await qc.invalidateQueries({ queryKey: ["session", id] });
+            await qc.invalidateQueries({ queryKey: ["sessions"] });
+          }}
         />
       )}
     </div>
@@ -535,61 +591,3 @@ function SmsTab({
     </div>
   );
 }
-
-function ConfirmModal({
-  title,
-  description,
-  confirmLabel,
-  danger,
-  disabled,
-  onCancel,
-  onConfirm,
-}: {
-  title: string;
-  description: string;
-  confirmLabel: string;
-  danger?: boolean;
-  disabled?: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40">
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card max-w-md w-full p-6">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-base font-semibold text-ink-900">{title}</h3>
-          <button
-            onClick={onCancel}
-            disabled={disabled}
-            className="text-ink-400 hover:text-ink-700 transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <p className="text-sm text-ink-500 mb-5">{description}</p>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            disabled={disabled}
-            className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={disabled}
-            className={
-              danger
-                ? "bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm disabled:opacity-50"
-                : "bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm disabled:opacity-50"
-            }
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
