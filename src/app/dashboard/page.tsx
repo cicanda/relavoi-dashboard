@@ -139,17 +139,17 @@ export default function OverviewPage() {
       <SandboxBanner />
 
       {/* Greeting bar */}
-      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+      <div className="mb-[var(--space-section)] flex items-end justify-between gap-x-4 gap-y-3 flex-wrap">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold text-ink-900 tracking-tight">
+          <h1 className="display-title">
             {greeting(now)}, {firstName(user?.name)}
           </h1>
-          <p className="text-sm text-ink-500 mt-1">
+          <p className="text-[15px] text-ink-500 mt-2">
             {formatDateHeader(now)} · Lagos · {formatLagosTime(now)} WAT
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono uppercase tracking-wider rounded-md bg-signal-500/15 text-signal-700">
+          <span className="chip bg-paper text-signal-700 shadow-sm ring-1 ring-ink-900/5">
             <span className="w-1.5 h-1.5 rounded-full bg-signal-500 animate-pulse-dot" />
             All systems operational
           </span>
@@ -157,7 +157,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="tray grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 mb-[var(--space-section)] [&>*]:min-w-0">
         <StatCard
           label="Active Sessions"
           value={activeQ.isLoading ? "" : fmtNumber(activeCount)}
@@ -187,42 +187,42 @@ export default function OverviewPage() {
       </div>
 
       {/* Two-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 [&>*]:min-w-0">
         {/* Active sessions table */}
-        <div className="lg:col-span-3">
-          <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
-            <div className="px-5 py-4 border-b border-ink-200 flex items-center justify-between">
+        <div className="xl:col-span-3">
+          <div className="card">
+            <div className="card-head flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-ink-900">Active Sessions</h2>
-                <p className="text-xs text-ink-500 mt-0.5">10 most recent</p>
+                <h2 className="section-title">Active Sessions</h2>
+                <p className="text-[13px] text-ink-500 mt-0.5">10 most recent</p>
               </div>
               <Link
                 href="/dashboard/sessions"
-                className="text-xs text-ink-600 hover:text-ink-900 inline-flex items-center gap-1"
+                className="link-more"
               >
                 View all <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-stack">
                 <thead>
                   <tr>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Session ID
                     </th>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Proxy
                     </th>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Status
                     </th>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Dir
                     </th>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Calls
                     </th>
-                    <th className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2">
+                    <th className="th">
                       Created
                     </th>
                   </tr>
@@ -244,24 +244,24 @@ export default function OverviewPage() {
                       <tr
                         key={s.id}
                         onClick={() => router.push(`/dashboard/sessions/${s.id}`)}
-                        className="cursor-pointer hover:bg-bone-100 transition-colors"
+                        className="row-link"
                       >
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                        <td data-label="Session ID" className="td text-[13px] text-ink-700 font-mono">
                           {truncId(s.id)}
                         </td>
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                        <td data-label="Proxy" className="td text-[13px] text-ink-700 font-mono">
                           {s.proxyNumber}
                         </td>
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                        <td data-label="Status" className="td text-[13px] text-ink-700">
                           <StatePill state={s.state} size="sm" />
                         </td>
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                        <td data-label="Dir" className="td text-[13px] text-ink-700">
                           <DirectionIcon mode={s.directionMode} />
                         </td>
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                        <td data-label="Calls" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                           {s.callCount ?? 0}
                         </td>
-                        <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                        <td data-label="Created" className="td text-[13px] text-ink-700">
                           {fmtRelative(s.createdAt)}
                         </td>
                       </tr>
@@ -274,11 +274,11 @@ export default function OverviewPage() {
         </div>
 
         {/* Right column */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 content-start gap-4 [&>*]:min-w-0">
           {/* Quick config */}
-          <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-            <h2 className="text-sm font-semibold text-ink-900 mb-3">Quick Config</h2>
-            <dl className="space-y-2.5">
+          <div className="card p-5">
+            <h2 className="section-title mb-4">Quick Config</h2>
+            <dl className="divide-y divide-ink-200">
               <ConfigRow label="Tier" value={config?.tier ?? tenant?.tier ?? "—"} />
               <ConfigRow
                 label="Recording"
@@ -306,22 +306,22 @@ export default function OverviewPage() {
             </dl>
             <Link
               href="/dashboard/settings"
-              className="mt-4 inline-flex items-center gap-1 text-xs text-ink-600 hover:text-ink-900"
+              className="mt-4 link-more"
             >
               Manage settings <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
 
           {/* Billing snapshot */}
-          <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-            <h2 className="text-sm font-semibold text-ink-900 mb-2">Billing</h2>
-            <p className="text-xs text-ink-500">
+          <div className="card p-5">
+            <h2 className="section-title mb-2">Billing</h2>
+            <p className="text-[13px] text-ink-500">
               Current period: this month · Plan:{" "}
               <span className="font-mono uppercase text-ink-700">{tenant?.tier ?? "—"}</span>
             </p>
             <Link
               href="/dashboard/billing"
-              className="mt-4 inline-flex items-center gap-1 text-xs text-ink-600 hover:text-ink-900"
+              className="mt-4 link-more"
             >
               View details <ChevronRight className="w-3 h-3" />
             </Link>
@@ -342,10 +342,10 @@ function ConfigRow({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt className="text-[11px] font-mono uppercase tracking-wider text-ink-500">{label}</dt>
+    <div className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+      <dt className="eyebrow">{label}</dt>
       <dd
-        className={`text-[13px] text-ink-900 text-right truncate ${mono ? "font-mono" : ""}`}
+        className={`text-[14px] text-ink-900 text-right truncate ${mono ? "font-mono text-[13px]" : ""}`}
         title={value}
       >
         {value}
@@ -366,7 +366,7 @@ function SandboxBanner() {
   if (tenant?.mode === "live") return null;
   if (mergedIntoKybBanner) return null;
   return (
-    <div className="mb-5 flex items-start gap-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+    <div className="callout mb-5 border-brand-amber/30 bg-brand-amber/10">
       <FlaskConical className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
       <div className="text-[13px] text-ink-700">
         You&apos;re in sandbox mode. API calls are free and no real calls are placed.{" "}

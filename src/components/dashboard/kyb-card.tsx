@@ -52,15 +52,15 @@ const UPLOAD_ORDER: KybDocumentKind[] = [
 ];
 
 const inputClass =
-  "w-full h-9 px-3 border border-ink-200 rounded-md text-[13px] focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 transition-colors";
+  "field w-full";
 const selectClass = `${inputClass} bg-paper`;
 const primaryBtn =
-  "bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  "btn btn-primary";
 const secondaryBtn =
-  "bg-paper border border-ink-200 text-ink-700 px-4 h-10 rounded-md hover:bg-bone-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  "btn btn-secondary";
 
 function Label({ children }: { children: ReactNode }) {
-  return <label className="block text-[12px] font-medium text-ink-700 mb-1.5">{children}</label>;
+  return <label className="field-label">{children}</label>;
 }
 
 function fmtBytes(n: number): string {
@@ -93,7 +93,7 @@ function validateFile(file: File): string | null {
 function StatusBanner({ state, onEdit }: { state: KybState; onEdit: () => void }) {
   if (state.status === "APPROVED") {
     return (
-      <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+      <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
         <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
         <div className="min-w-0">
           <div className="text-[13px] font-medium text-emerald-900">Business verified</div>
@@ -107,7 +107,7 @@ function StatusBanner({ state, onEdit }: { state: KybState; onEdit: () => void }
 
   if (state.status === "PENDING") {
     return (
-      <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
         <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
         <div className="min-w-0">
           <div className="text-[13px] font-medium text-amber-900">Verification under review</div>
@@ -123,7 +123,7 @@ function StatusBanner({ state, onEdit }: { state: KybState; onEdit: () => void }
 
   if (state.status === "REJECTED") {
     return (
-      <div className="flex items-start gap-3 rounded-md border border-rose-200 bg-rose-50 p-3">
+      <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3.5">
         <AlertCircle className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-medium text-rose-900">Verification needs changes</div>
@@ -144,7 +144,7 @@ function StatusBanner({ state, onEdit }: { state: KybState; onEdit: () => void }
   }
 
   return (
-    <div className="flex items-start gap-3 rounded-md border border-ink-200 bg-bone-100 p-3">
+    <div className="flex items-start gap-3 rounded-xl border border-ink-200 bg-bone-50 p-3.5">
       <AlertCircle className="w-4 h-4 text-ink-500 mt-0.5 shrink-0" />
       <div className="min-w-0">
         <div className="text-[13px] font-medium text-ink-900">Not submitted</div>
@@ -184,7 +184,7 @@ function DocumentRow({
           onClick={onDelete}
           disabled={deleting}
           aria-label={`Remove ${doc.filename}`}
-          className="shrink-0 p-1.5 rounded-md text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
+          className="shrink-0 -my-2 w-11 h-11 lg:w-8 lg:h-8 lg:my-0 flex items-center justify-center rounded-full text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -244,7 +244,7 @@ function UploadRow({
             type="button"
             disabled={disabled}
             onClick={() => ref.current?.click()}
-            className={`${secondaryBtn} h-9 inline-flex items-center gap-1.5 text-[13px] w-full sm:w-auto justify-center`}
+            className={`${secondaryBtn} btn-sm w-full sm:w-auto`}
           >
             <Upload className="w-3.5 h-3.5" /> Choose file
           </button>
@@ -262,7 +262,7 @@ function UploadRow({
           {p.error ? (
             <div className="mt-1 text-[11px] text-rose-600 break-words">{p.error}</div>
           ) : (
-            <div className="mt-1 h-1 w-full rounded bg-ink-200 overflow-hidden">
+            <div className="mt-1 h-1 w-full rounded-full bg-bone-200 overflow-hidden">
               <div
                 className="h-full bg-signal-500 transition-[width] duration-200"
                 style={{ width: `${p.percent}%` }}
@@ -400,7 +400,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
 
   if (q.isLoading) {
     return (
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
+      <section className="card p-5">
         <Skeleton className="h-4 w-48" />
         <div className="mt-4 space-y-2">
           <Skeleton className="h-3 w-full" />
@@ -412,7 +412,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
 
   if (!state) {
     return (
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 text-sm text-ink-700">
+      <section className="card p-5 text-sm text-ink-700">
         Could not load business verification. Refresh the page.
       </section>
     );
@@ -426,15 +426,15 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
     editable && state.missingDetails.length === 0 && state.missingKinds.length === 0;
 
   return (
-    <section id="business-verification" className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 scroll-mt-20">
-      <div className="mb-4">
-        <h2 className="text-base font-semibold text-ink-900">Business verification</h2>
-        <p className="text-sm text-ink-500 mt-1">
+    <section id="business-verification" className="card p-[clamp(1.125rem,0.8rem+1.2vw,1.75rem)] scroll-mt-24 xl:grid xl:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] xl:gap-x-10">
+      <div className="mb-5 xl:mb-0">
+        <h2 className="section-title">Business verification</h2>
+        <p className="text-[14px] text-ink-500 mt-1.5">
           Required before live mode. A Relavoi operator reviews your registration by hand.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0">
         <StatusBanner state={state} onEdit={() => setForceEdit(true)} />
 
         {!canManage && (
@@ -446,7 +446,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
         {showForm && (
           <div className="space-y-4">
             {/* Stacked on a phone, two columns from sm up. */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
               <div className="sm:col-span-2">
                 <Label>Registered name, exactly as on the certificate</Label>
                 <input
@@ -567,8 +567,8 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
 
         {/* ── Documents ── */}
         <div>
-          <h3 className="text-[13px] font-semibold text-ink-900 mb-1">Documents</h3>
-          <p className="text-[11px] text-ink-500 mb-2">
+          <h3 className="text-[15px] font-medium tracking-[-0.01em] text-ink-900 mb-1">Documents</h3>
+          <p className="text-[12px] text-ink-500 mb-2">
             A certificate of registration and a director or owner ID are required. Others help us
             decide faster.
           </p>
@@ -591,8 +591,8 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
           )}
 
           {editable && (
-            <div className="rounded-md border border-ink-200">
-              <div className="px-3">
+            <div className="rounded-xl border border-ink-200">
+              <div className="px-3.5">
                 {UPLOAD_ORDER.map((kind) => (
                   <UploadRow
                     key={kind}
@@ -662,27 +662,27 @@ export function KybPromptModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink-900/40 p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-brand-navy/40 backdrop-blur-[2px] p-0 sm:p-4 animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="kyb-prompt-title"
     >
-      <div className="bg-paper w-full sm:max-w-md rounded-t-[14px] sm:rounded-[12px] shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between gap-3 p-5 pb-3">
-          <h2 id="kyb-prompt-title" className="text-base font-semibold text-ink-900">
+      <div className="bg-paper w-full sm:max-w-md rounded-t-[24px] sm:rounded-[24px] shadow-raised ring-1 ring-ink-900/5 max-h-[90vh] overflow-y-auto animate-dialog-in">
+        <div className="flex items-start justify-between gap-3 p-6 pb-3">
+          <h2 id="kyb-prompt-title" className="section-title">
             Verify your business to go live
           </h2>
           <button
             onClick={onDismiss}
             disabled={dismissing}
             aria-label="Close"
-            className="shrink-0 p-1 rounded-md text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors"
+            className="shrink-0 -m-1.5 w-10 h-10 flex items-center justify-center rounded-full text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="px-6 pb-6">
           <p className="text-[13px] text-ink-600">
             Sandbox works right now with no verification. To place real calls, we need to confirm
             who you are.
@@ -750,12 +750,12 @@ export function KybBanner({
   const tones = {
     amber: "border-amber-200 bg-amber-50 text-amber-900",
     rose: "border-rose-200 bg-rose-50 text-rose-900",
-    ink: "border-ink-200 bg-bone-100 text-ink-800",
+    ink: "border-ink-200 bg-paper text-ink-800 shadow-sm",
   };
 
   return (
     <div
-      className={`mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-[12px] ${tones[copy.tone]}`}
+      className={`mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3.5 py-2.5 text-[13px] ${tones[copy.tone]}`}
     >
       {state.status === "PENDING" ? (
         <Clock className="w-3.5 h-3.5 shrink-0" />

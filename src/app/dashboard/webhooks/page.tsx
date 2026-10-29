@@ -58,7 +58,7 @@ function CopyButton({
           /* ignore */
         }
       }}
-      className={`inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-ink-500 hover:text-ink-900 transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 min-h-11 -my-3.5 lg:min-h-0 lg:my-0 eyebrow hover:text-ink-900 transition-colors ${className}`}
       aria-label="Copy"
     >
       {copied ? (
@@ -90,14 +90,14 @@ function CodeBlock({
   return (
     <div className="relative group">
       {language && (
-        <div className="absolute top-2 left-3 text-[10px] font-mono uppercase tracking-wider text-ink-400">
+        <div className="absolute top-3 left-4 text-[10px] font-mono uppercase tracking-wider text-ink-400">
           {language}
         </div>
       )}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2.5">
         <CopyButton text={content} className="text-ink-400 hover:text-paper" />
       </div>
-      <pre className="bg-ink-900 text-paper font-mono text-[12px] leading-relaxed p-4 pt-7 rounded-md overflow-x-auto">
+      <pre className="code-block p-4 pt-9">
         <code>{content}</code>
       </pre>
     </div>
@@ -120,7 +120,7 @@ function Tabs({
   onChange: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-0 border-b border-ink-200 mb-3">
+    <div className="tabs mb-3">
       {tabs.map((t) => {
         const isActive = t.id === active;
         return (
@@ -128,11 +128,9 @@ function Tabs({
             key={t.id}
             type="button"
             onClick={() => onChange(t.id)}
-            className={`px-3 h-9 text-sm transition-colors -mb-px border-b-2 ${
-              isActive
-                ? "border-signal-500 text-ink-900 font-medium"
-                : "border-transparent text-ink-500 hover:text-ink-700"
-            }`}
+            data-active={isActive}
+            aria-pressed={isActive}
+            className="tab"
           >
             {t.label}
           </button>
@@ -152,11 +150,11 @@ function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink-900/40 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-brand-navy/40 backdrop-blur-[2px] flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-paper rounded-[10px] shadow-card max-w-md w-full p-6"
+        className="dialog animate-dialog-in max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -312,10 +310,10 @@ export default function WebhooksPage() {
       />
 
       {/* Card 1 — Endpoint Configuration */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
+      <section className="card p-5 mb-5">
         <div className="flex items-center gap-2">
           <WebhookIcon className="w-4 h-4 text-ink-600" />
-          <h2 className="font-semibold text-ink-900">Endpoint URL</h2>
+          <h2 className="section-title">Endpoint URL</h2>
         </div>
 
         <div className="mt-3 flex items-stretch gap-2">
@@ -324,35 +322,35 @@ export default function WebhooksPage() {
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             placeholder="https://api.example.com/relavoi/webhooks"
-            className="flex-1 h-9 px-3 border border-ink-200 rounded-md text-[13px] focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 bg-paper font-mono"
+            className="field flex-1 font-mono"
           />
           <button
             type="button"
             onClick={handleSaveUrl}
             disabled={registerMutation.isPending}
-            className="bg-ink-900 text-paper px-4 h-9 rounded-md font-medium hover:bg-ink-800 text-sm transition-colors disabled:opacity-50"
+            className="btn btn-primary btn-sm"
           >
             {registerMutation.isPending ? "Saving..." : "Update"}
           </button>
         </div>
-        <p className="text-xs italic text-ink-500 mt-2">
+        <p className="text-[13px] italic text-ink-500 mt-2">
           POST events go to this URL. We expect a 2xx response within 10s.
         </p>
 
         {/* Signing secret */}
         <div className="mt-5 pt-5 border-t border-ink-200">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-2">
+          <div className="eyebrow mb-2">
             Signing secret
           </div>
-          <div className="flex items-center gap-3">
-            <code className="font-mono text-[13px] text-ink-700 bg-bone-100 border border-ink-200 rounded-md px-3 py-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <code className="font-mono text-[13px] text-ink-700 bg-bone-50 border border-ink-200 rounded-lg px-3 py-2 min-w-0 break-all">
               {maskedSecret}
             </code>
             <CopyButton text={maskedSecret} />
             <button
               type="button"
               onClick={() => setRegenOpen(true)}
-              className="ml-auto bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors inline-flex items-center gap-1.5"
+              className="btn btn-secondary btn-sm ml-auto"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Regenerate secret
@@ -362,8 +360,8 @@ export default function WebhooksPage() {
       </section>
 
       {/* Card 2 — Event Subscriptions */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
-        <h2 className="font-semibold text-ink-900">Events</h2>
+      <section className="card p-5 mb-5">
+        <h2 className="section-title">Events</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
           Which event types are delivered to your endpoint.
         </p>
@@ -372,7 +370,7 @@ export default function WebhooksPage() {
           {EVENT_TYPES.map((evt) => (
             <label
               key={evt.id}
-              className="flex items-start gap-3 p-3 border border-ink-200 rounded-md bg-bone-100/40 opacity-90"
+              className="flex items-start gap-3 p-3.5 border border-ink-200 rounded-xl bg-bone-50 opacity-90"
             >
               <input
                 type="checkbox"
@@ -383,24 +381,24 @@ export default function WebhooksPage() {
               />
               <div className="min-w-0">
                 <div className="font-mono text-[12px] text-ink-900">{evt.id}</div>
-                <div className="text-xs text-ink-500 mt-0.5">
+                <div className="text-[13px] text-ink-500 mt-0.5">
                   {evt.description}
                 </div>
               </div>
             </label>
           ))}
         </div>
-        <p className="text-xs italic text-ink-500 mt-4">
+        <p className="text-[13px] italic text-ink-500 mt-4">
           Per-event selection coming soon. All events are currently delivered.
         </p>
       </section>
 
       {/* Card 3 — Delivery Logs */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card mb-5">
+      <section className="card mb-5">
         <div className="p-5 pb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-semibold text-ink-900">Delivery log</h2>
-            <p className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mt-1">
+            <h2 className="section-title">Delivery log</h2>
+            <p className="eyebrow mt-1">
               auto-refreshing every 30s
             </p>
           </div>
@@ -408,7 +406,7 @@ export default function WebhooksPage() {
             type="button"
             onClick={() => testMutation.mutate()}
             disabled={testMutation.isPending}
-            className="bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 text-sm transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+            className="btn btn-primary"
           >
             <Send className="w-3.5 h-3.5" />
             {testMutation.isPending ? "Sending..." : "Send Test Event"}
@@ -416,14 +414,14 @@ export default function WebhooksPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-stack">
             <thead>
               <tr>
                 {["Event type", "Status", "HTTP", "Attempt #", "When"].map(
                   (h) => (
                     <th
                       key={h}
-                      className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2"
+                      className="th"
                     >
                       {h}
                     </th>
@@ -447,24 +445,24 @@ export default function WebhooksPage() {
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-bone-100/60 transition-colors">
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                  <tr key={log.id} className="hover:bg-bone-50 transition-colors">
+                    <td data-label="Event type" className="td text-[13px] text-ink-700 font-mono">
                       {log.event}
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200">
+                    <td data-label="Status" className="td">
                       <StatePill
                         state={log.success ? "DELIVERED" : "FAILED"}
                         size="sm"
                       />
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                    <td data-label="HTTP" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                       {log.statusCode ?? "—"}
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                    <td data-label="Attempt #" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                       {log.attemptCount ?? 1}
                     </td>
-                    <td
-                      className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                    <td data-label="When"
+                      className="td text-[13px] text-ink-700"
                       title={fmtAbsolute(log.requestedAt)}
                     >
                       {fmtRelative(log.requestedAt)}
@@ -478,11 +476,11 @@ export default function WebhooksPage() {
       </section>
 
       {/* Card 4 — Signature Verification */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-        <h2 className="font-semibold text-ink-900">Verify the signature</h2>
+      <section className="card p-5">
+        <h2 className="section-title">Verify the signature</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
           Each request includes{" "}
-          <code className="font-mono text-[12px] bg-bone-100 px-1.5 py-0.5 rounded">
+          <code className="font-mono text-[12px] bg-bone-100 px-1.5 py-0.5 rounded-md">
             X-Relavoi-Signature: t=…,v1=…
           </code>
           . Recompute the HMAC and reject mismatches.
@@ -505,11 +503,11 @@ export default function WebhooksPage() {
       {regenOpen && (
         <Modal onClose={() => (regenMutation.isPending ? undefined : setRegenOpen(false))}>
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-9 h-9 rounded-md bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
               <AlertTriangle className="w-4 h-4 text-red-700" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-ink-900">
+              <h3 className="section-title">
                 Regenerate signing secret?
               </h3>
               <p className="text-sm text-ink-500 mt-1">
@@ -523,7 +521,7 @@ export default function WebhooksPage() {
               type="button"
               disabled={regenMutation.isPending}
               onClick={() => setRegenOpen(false)}
-              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50"
+              className="btn btn-secondary btn-sm"
             >
               Cancel
             </button>
@@ -531,7 +529,7 @@ export default function WebhooksPage() {
               type="button"
               disabled={regenMutation.isPending}
               onClick={handleRegen}
-              className="bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm disabled:opacity-50"
+              className="btn bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
             >
               {regenMutation.isPending ? "Regenerating..." : "Regenerate"}
             </button>

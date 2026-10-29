@@ -37,7 +37,7 @@ function CopyButton({
           /* ignore */
         }
       }}
-      className={`inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-ink-500 hover:text-ink-900 transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 min-h-11 -my-3.5 lg:min-h-0 lg:my-0 eyebrow hover:text-ink-900 transition-colors ${className}`}
       aria-label={label ?? "Copy"}
       type="button"
     >
@@ -70,14 +70,14 @@ function CodeBlock({
   return (
     <div className="relative group">
       {language && (
-        <div className="absolute top-2 left-3 text-[10px] font-mono uppercase tracking-wider text-ink-400">
+        <div className="absolute top-3 left-4 text-[10px] font-mono uppercase tracking-wider text-ink-400">
           {language}
         </div>
       )}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2.5">
         <CopyButton text={content} className="text-ink-400 hover:text-paper" />
       </div>
-      <pre className="bg-ink-900 text-paper font-mono text-[12px] leading-relaxed p-4 pt-7 rounded-md overflow-x-auto">
+      <pre className="code-block p-4 pt-9">
         <code>{content}</code>
       </pre>
     </div>
@@ -100,7 +100,7 @@ function Tabs({
   onChange: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-0 border-b border-ink-200 mb-3">
+    <div className="tabs mb-3">
       {tabs.map((t) => {
         const isActive = t.id === active;
         return (
@@ -108,11 +108,9 @@ function Tabs({
             key={t.id}
             type="button"
             onClick={() => onChange(t.id)}
-            className={`px-3 h-9 text-sm transition-colors -mb-px border-b-2 ${
-              isActive
-                ? "border-signal-500 text-ink-900 font-medium"
-                : "border-transparent text-ink-500 hover:text-ink-700"
-            }`}
+            data-active={isActive}
+            aria-pressed={isActive}
+            className="tab"
           >
             {t.label}
           </button>
@@ -182,11 +180,11 @@ function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink-900/40 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-brand-navy/40 backdrop-blur-[2px] flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-paper rounded-[10px] shadow-card max-w-md w-full p-6"
+        className="dialog animate-dialog-in max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -248,8 +246,8 @@ export default function ApiKeysPage() {
       <KeyCards />
 
       {/* Card 2 — SDK Quick Start */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
-        <h2 className="font-semibold text-ink-900">Quick start</h2>
+      <section className="card p-5 mb-5">
+        <h2 className="section-title">Quick start</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
           Drop-in snippets to get a first masked call running.
         </p>
@@ -268,8 +266,8 @@ export default function ApiKeysPage() {
       </section>
 
       {/* Card 3 — Token Exchange */}
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-        <h2 className="font-semibold text-ink-900">Token exchange</h2>
+      <section className="card p-5">
+        <h2 className="section-title">Token exchange</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
           If you&apos;re not using the SDK, exchange your key + secret for a
           short-lived JWT directly.
@@ -327,11 +325,11 @@ function KeyCards() {
 
   return (
     <>
-      <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-5">
+      <section className="card p-5 mb-5">
         <div className="flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-ink-600" />
-          <h2 className="font-semibold text-ink-900">Sandbox keys</h2>
-          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 font-mono text-[10px] uppercase tracking-wider">
+          <h2 className="section-title">Sandbox keys</h2>
+          <span className="chip py-0.5 text-[10px] bg-brand-amber/15 text-amber-700">
             rk_test_
           </span>
         </div>
@@ -343,26 +341,26 @@ function KeyCards() {
           type="button"
           onClick={() => genMut.mutate("sandbox")}
           disabled={genMut.isPending}
-          className="mt-4 bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+          className="btn btn-primary btn-sm mt-4"
         >
           {tenant?.hasSandboxKeys ? "Regenerate sandbox keys" : "Generate sandbox keys"}
         </button>
         {tenant?.hasSandboxKeys && (
-          <p className="text-xs text-ink-500 mt-2">
+          <p className="text-[13px] text-ink-500 mt-2">
             Regenerating immediately invalidates the previous sandbox key.
           </p>
         )}
       </section>
 
       <section
-        className={`bg-paper border rounded-[10px] shadow-card p-5 mb-5 ${
+        className={`card p-5 mb-5 ${
           mode === "live" ? "border-ink-200" : "border-ink-200 opacity-90"
         }`}
       >
         <div className="flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-ink-600" />
-          <h2 className="font-semibold text-ink-900">Live keys</h2>
-          <span className="px-1.5 py-0.5 rounded bg-signal-500/15 text-signal-700 font-mono text-[10px] uppercase tracking-wider">
+          <h2 className="section-title">Live keys</h2>
+          <span className="chip py-0.5 text-[10px] bg-signal-500/15 text-signal-700">
             rk_live_
           </span>
         </div>
@@ -375,7 +373,7 @@ function KeyCards() {
             type="button"
             onClick={() => genMut.mutate("live")}
             disabled={genMut.isPending}
-            className="mt-4 bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+            className="btn btn-primary btn-sm mt-4"
           >
             {tenant?.hasLiveKeys ? "Regenerate live keys" : "Generate live keys"}
           </button>
@@ -414,7 +412,7 @@ function KeyCards() {
               type="button"
               onClick={() => activateMut.mutate()}
               disabled={!allMet || activateMut.isPending}
-              className="bg-ink-900 text-paper px-3 h-9 rounded-md text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn btn-primary btn-sm"
             >
               {activateMut.isPending ? "Activating…" : "Activate live mode"}
             </button>
@@ -424,7 +422,7 @@ function KeyCards() {
 
       {creds && (
         <Modal onClose={() => setCreds(null)}>
-          <h3 className="font-semibold text-ink-900">
+          <h3 className="section-title">
             {creds.mode === "live" ? "Live" : "Sandbox"} credentials
           </h3>
           <p className="text-sm text-ink-500 mt-1">
@@ -434,7 +432,7 @@ function KeyCards() {
             <div>
               <div className="text-[12px] font-medium text-ink-700 mb-1">API key</div>
               <div className="flex items-center gap-2">
-                <code className="font-mono text-[12px] bg-bone-100 border border-ink-200 rounded-md px-3 py-2 break-all flex-1">
+                <code className="font-mono text-[12px] bg-bone-50 border border-ink-200 rounded-lg px-3 py-2 break-all flex-1">
                   {creds.apiKey}
                 </code>
                 <CopyButton text={creds.apiKey} />
@@ -443,7 +441,7 @@ function KeyCards() {
             <div>
               <div className="text-[12px] font-medium text-ink-700 mb-1">API secret</div>
               <div className="flex items-center gap-2">
-                <code className="font-mono text-[12px] bg-bone-100 border border-ink-200 rounded-md px-3 py-2 break-all flex-1">
+                <code className="font-mono text-[12px] bg-bone-50 border border-ink-200 rounded-lg px-3 py-2 break-all flex-1">
                   {creds.apiSecret}
                 </code>
                 <CopyButton text={creds.apiSecret} />
@@ -453,7 +451,7 @@ function KeyCards() {
           <button
             type="button"
             onClick={() => setCreds(null)}
-            className="mt-5 bg-ink-900 text-paper px-4 h-9 rounded-md text-sm font-medium hover:bg-ink-800"
+            className="btn btn-primary btn-sm mt-5"
           >
             I've stored them
           </button>

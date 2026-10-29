@@ -62,22 +62,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-ink-900 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-paper border border-ink-200 rounded-[10px] shadow-card p-8">
+    <div className="auth-backdrop min-h-screen w-full flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md card rounded-[28px] p-[clamp(1.5rem,1rem+2vw,2.5rem)] shadow-raised animate-dialog-in">
         <div className="flex flex-col items-center text-center">
           <BrandLogo height={44} />
-          <h1 className="mt-4 text-sm text-ink-500">Sign in to your workspace</h1>
+          <h1 className="mt-5 text-[15px] text-ink-500 tracking-normal">Sign in to your workspace</h1>
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2 text-sm text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5 text-sm text-red-700">
               {error}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="email" className="block text-[12px] font-medium text-ink-700">
+            <label htmlFor="email" className="field-label mb-0">
               Email
             </label>
             <input
@@ -88,12 +88,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="w-full h-9 px-3 border border-ink-200 rounded-md text-[13px] focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 transition-colors"
+              className="field w-full h-11"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="password" className="block text-[12px] font-medium text-ink-700">
+            <label htmlFor="password" className="field-label mb-0">
               Password
             </label>
             <div className="relative">
@@ -105,12 +105,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full h-9 pl-3 pr-10 border border-ink-200 rounded-md text-[13px] focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 transition-colors"
+                className="field w-full h-11 pr-11"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-ink-400 hover:text-ink-700 transition-colors"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full text-ink-400 hover:text-ink-700 transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 tabIndex={-1}
               >
@@ -122,7 +122,7 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <Link
               href="/login"
-              className="text-[12px] text-ink-500 hover:text-ink-900 transition-colors"
+              className="text-[13px] text-ink-500 hover:text-ink-900 transition-colors"
             >
               Forgot password?
             </Link>
@@ -131,7 +131,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-ink-900 text-paper h-10 rounded-md font-medium hover:bg-ink-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn btn-primary w-full h-11"
           >
             {submitting ? "Signing in…" : "Sign in"}
           </button>
@@ -141,7 +141,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="text-ink-900 font-medium hover:text-signal-700 transition-colors"
+            className="text-ink-900 font-medium hover:text-brand-teal transition-colors"
           >
             Sign up
           </Link>

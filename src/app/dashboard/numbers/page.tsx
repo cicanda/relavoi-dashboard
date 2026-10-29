@@ -88,7 +88,7 @@ export default function NumbersPage() {
           <button
             onClick={() => poolQ.refetch()}
             disabled={poolQ.isFetching}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-ink-700 bg-paper border border-ink-200 rounded-md hover:bg-bone-100 transition-colors disabled:opacity-50"
+            className="btn btn-secondary"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${poolQ.isFetching ? "animate-spin" : ""}`} />
             Refresh
@@ -96,12 +96,12 @@ export default function NumbersPage() {
         }
       />
 
-      <div className="-mt-4 mb-4 text-[11px] font-mono uppercase tracking-wider text-ink-500">
+      <div className="-mt-2 mb-4 eyebrow">
         Updated {updatedLabel}
       </div>
 
       {/* Pool Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+      <div className="tray grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 mb-4 [&>*]:min-w-0">
         <StatCard label="Total" value={loading ? "" : fmtNumber(totals.total)} loading={loading} />
         <StatCard
           label="Available"
@@ -122,11 +122,11 @@ export default function NumbersPage() {
       </div>
 
       {/* Utilization Gauge */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-4">
+      <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-base text-ink-900">Pool Utilization</h2>
+          <h2 className="section-title">Pool Utilization</h2>
           {!loading && (
-            <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500 tabular-nums">
+            <span className="text-[clamp(1.5rem,1.3rem+0.6vw,1.875rem)] leading-none tracking-[-0.04em] text-ink-900 tabular-nums">
               {utilization}%
             </span>
           )}
@@ -134,9 +134,9 @@ export default function NumbersPage() {
         {loading ? (
           <Skeleton className="h-3 w-full" />
         ) : (
-          <div className="bg-ink-200 h-3 rounded-full overflow-hidden">
+          <div className="bg-bone-100 ring-1 ring-inset ring-ink-900/5 h-3 rounded-full overflow-hidden">
             <div
-              className={`h-full ${utilColor(utilization)} transition-all`}
+              className={`h-full rounded-full ${utilColor(utilization)} transition-all duration-700`}
               style={{ width: `${utilization}%` }}
             />
           </div>
@@ -148,7 +148,7 @@ export default function NumbersPage() {
               <span className="font-medium">{fmtNumber(totals.total)}</span> numbers in use (
               {utilization}%)
             </div>
-            <div className="text-xs text-ink-500 mt-0.5 tabular-nums">
+            <div className="text-[13px] text-ink-500 mt-0.5 tabular-nums">
               {fmtNumber(totals.available)} available, {fmtNumber(totals.cooldown)} in cooldown
             </div>
           </>
@@ -156,12 +156,12 @@ export default function NumbersPage() {
       </div>
 
       {/* By Region */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card mb-4">
-        <div className="px-5 py-4 border-b border-ink-200">
-          <h2 className="text-sm font-semibold text-ink-900">By Region</h2>
+      <div className="card mb-4">
+        <div className="card-head">
+          <h2 className="section-title">By Region</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-stack">
             <thead>
               <tr>
                 {[
@@ -175,7 +175,7 @@ export default function NumbersPage() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left"
+                    className="th"
                   >
                     {h}
                   </th>
@@ -187,7 +187,7 @@ export default function NumbersPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((__, j) => (
-                      <td key={j} className="px-4 py-3 border-t border-ink-200">
+                      <td key={j} className="td">
                         <Skeleton className="h-3 w-full" />
                       </td>
                     ))}
@@ -207,28 +207,28 @@ export default function NumbersPage() {
                   const u = pct(r.inUse, r.total);
                   return (
                     <tr key={r.region}>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono uppercase tracking-wider">
+                      <td data-label="Region" className="td text-[13px] text-ink-700 font-mono uppercase tracking-wider">
                         {r.region}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                      <td data-label="Total" className="td text-[13px] text-ink-700 tabular-nums">
                         {fmtNumber(r.total)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-signal-700 tabular-nums">
+                      <td data-label="Available" className="td text-[13px] text-signal-700 tabular-nums">
                         {fmtNumber(r.available)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-blue-700 tabular-nums">
+                      <td data-label="In Use" className="td text-[13px] text-blue-700 tabular-nums">
                         {fmtNumber(r.inUse)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-amber-700 tabular-nums">
+                      <td data-label="Cooldown" className="td text-[13px] text-amber-700 tabular-nums">
                         {fmtNumber(r.cooldown)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-red-700 tabular-nums">
+                      <td data-label="Quarantined" className="td text-[13px] text-red-700 tabular-nums">
                         {fmtNumber(r.quarantined)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                      <td data-label="Utilization" className="td text-[13px] text-ink-700">
                         <div className="flex items-center gap-2">
                           <div
-                            className="bg-ink-200 h-1.5 rounded-full overflow-hidden"
+                            className="bg-bone-100 ring-1 ring-inset ring-ink-900/5 h-1.5 rounded-full overflow-hidden"
                             style={{ width: 80 }}
                           >
                             <div

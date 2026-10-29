@@ -140,7 +140,7 @@ export default function BillingPage() {
           <select
             value={periodValue}
             onChange={(e) => setPeriodValue(e.target.value)}
-            className="px-3 py-1.5 text-[13px] text-ink-700 bg-paper border border-ink-200 rounded-md hover:bg-bone-100 transition-colors"
+            className="btn btn-secondary"
           >
             {PERIOD_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -152,14 +152,14 @@ export default function BillingPage() {
       />
 
       {/* Current Period Summary */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5 mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="tray mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 [&>*]:min-w-0">
           {/* Left */}
-          <div>
-            <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1.5">
+          <div className="card p-5">
+            <div className="eyebrow mb-1.5">
               Period
             </div>
-            <div className="text-base font-semibold text-ink-900 mb-2">{periodLabel}</div>
+            <div className="section-title mb-2">{periodLabel}</div>
             <div className="mb-2">
               <StatePill state="ACTIVE" size="sm" />
             </div>
@@ -167,41 +167,41 @@ export default function BillingPage() {
           </div>
 
           {/* Middle */}
-          <div>
-            <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1.5">
+          <div className="card p-5">
+            <div className="eyebrow mb-1.5">
               Total spend
             </div>
             {usageLoading || pricingQ.isLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <div className="text-2xl font-semibold text-ink-900 tabular-nums">
+              <div className="text-[clamp(1.75rem,1.5rem+0.8vw,2.25rem)] leading-none font-normal tracking-[-0.04em] text-ink-900 tabular-nums">
                 {fmtCurrency(totalSpend.value, totalSpend.currency)}
               </div>
             )}
-            <div className="text-xs text-ink-500 mt-1">Overage charges this period</div>
+            <div className="text-[13px] text-ink-500 mt-1">Overage charges this period</div>
           </div>
 
           {/* Right */}
-          <div>
-            <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1.5">
+          <div className="card p-5">
+            <div className="eyebrow mb-1.5">
               Events
             </div>
             {usageLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : (
-              <div className="text-2xl font-semibold text-ink-900 tabular-nums">
+              <div className="text-[clamp(1.75rem,1.5rem+0.8vw,2.25rem)] leading-none font-normal tracking-[-0.04em] text-ink-900 tabular-nums">
                 {fmtNumber(totalEvents)}
               </div>
             )}
-            <div className="text-xs text-ink-500 mt-1">Total billable events recorded</div>
+            <div className="text-[13px] text-ink-500 mt-1">Total billable events recorded</div>
           </div>
         </div>
       </div>
 
       {/* Usage Breakdown */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card mb-4">
-        <div className="px-5 py-4 border-b border-ink-200">
-          <h2 className="text-sm font-semibold text-ink-900">Usage by metric</h2>
+      <div className="card mb-4">
+        <div className="card-head">
+          <h2 className="section-title">Usage by metric</h2>
         </div>
         <div className="p-5">
           {usageLoading ? (
@@ -231,7 +231,7 @@ export default function BillingPage() {
                   <div key={metric} className="space-y-1.5">
                     <div className="flex items-baseline justify-between gap-3">
                       <div className="flex items-baseline gap-3 min-w-0">
-                        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">
+                        <span className="eyebrow">
                           {metric}
                         </span>
                         <span className="text-[13px] text-ink-900 font-medium truncate">
@@ -244,13 +244,13 @@ export default function BillingPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-ink-200 h-2 rounded-full overflow-hidden">
+                      <div className="flex-1 bg-bone-100 ring-1 ring-inset ring-ink-900/5 h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${progressColor(pct)} transition-all`}
+                          className={`h-full rounded-full ${progressColor(pct)} transition-all duration-700`}
                           style={{ width: `${Math.min(pct, 100)}%` }}
                         />
                       </div>
-                      <div className="text-[12px] tabular-nums w-32 text-right flex-shrink-0">
+                      <div className="text-[12px] tabular-nums w-24 sm:w-32 text-right flex-shrink-0">
                         {pct > 100 ? (
                           <span className="text-red-700 font-medium">
                             {fmtCurrency(cost, currency)}
@@ -269,12 +269,12 @@ export default function BillingPage() {
       </div>
 
       {/* Pricing reference (collapsible) */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card mb-4">
+      <div className="card mb-4">
         <button
           onClick={() => setPricingOpen((v) => !v)}
-          className="w-full px-5 py-4 flex items-center justify-between hover:bg-bone-100 transition-colors rounded-[10px]"
+          className="w-full px-5 py-4 flex items-center justify-between hover:bg-bone-50 transition-colors rounded-card min-h-[44px]"
         >
-          <h2 className="text-sm font-semibold text-ink-900">Tier Pricing</h2>
+          <h2 className="section-title">Tier Pricing</h2>
           {pricingOpen ? (
             <ChevronDown className="w-4 h-4 text-ink-500" />
           ) : (
@@ -303,24 +303,24 @@ export default function BillingPage() {
                     return (
                       <div key={t}>
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-[13px] font-semibold text-ink-900 font-mono uppercase tracking-wider">
+                          <h3 className="text-[14px] font-medium text-ink-900 uppercase tracking-[0.04em]">
                             {t}
                           </h3>
                           {isCurrent && (
-                            <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-signal-500/15 text-signal-700">
+                            <span className="chip py-0.5 text-[10px] bg-signal-500/15 text-signal-700">
                               Current
                             </span>
                           )}
                         </div>
                         <div className="overflow-x-auto">
-                          <table className="w-full">
+                          <table className="w-full table-stack">
                             <thead>
                               <tr>
                                 {["Metric", "Included", "Unit price", "Overage", "Currency"].map(
                                   (h) => (
                                     <th
                                       key={h}
-                                      className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left"
+                                      className="th"
                                     >
                                       {h}
                                     </th>
@@ -332,26 +332,26 @@ export default function BillingPage() {
                               {rows.map((row) => (
                                 <tr
                                   key={`${row.tier}-${row.metric}`}
-                                  className={isCurrent ? "bg-bone-100" : ""}
+                                  className={isCurrent ? "bg-signal-500/[0.06]" : ""}
                                 >
-                                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                                  <td data-label="Metric" className="td text-[13px] text-ink-700">
                                     <span className="font-mono uppercase text-[11px] text-ink-500 mr-2">
                                       {row.metric}
                                     </span>
                                     {metricLabel(row.metric)}
                                   </td>
-                                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                                  <td data-label="Included" className="td text-[13px] text-ink-700 tabular-nums">
                                     {row.includedQuantity.toLocaleString()}
                                   </td>
-                                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                                  <td data-label="Unit price" className="td text-[13px] text-ink-700 tabular-nums">
                                     {fmtCurrency(row.unitPrice, row.currency)}
                                   </td>
-                                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                                  <td data-label="Overage" className="td text-[13px] text-ink-700 tabular-nums">
                                     {row.overagePrice != null
                                       ? fmtCurrency(row.overagePrice, row.currency)
                                       : "—"}
                                   </td>
-                                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                                  <td data-label="Currency" className="td text-[13px] text-ink-700 font-mono">
                                     {row.currency}
                                   </td>
                                 </tr>
@@ -369,18 +369,18 @@ export default function BillingPage() {
       </div>
 
       {/* Billing history */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
-        <div className="px-5 py-4 border-b border-ink-200">
-          <h2 className="text-sm font-semibold text-ink-900">Billing history</h2>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section-title">Billing history</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-stack">
             <thead>
               <tr>
                 {["Period", "Status", "Total events", "Cost", "Invoiced at", "Actions"].map((h) => (
                   <th
                     key={h}
-                    className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left"
+                    className="th"
                   >
                     {h}
                   </th>
@@ -391,29 +391,29 @@ export default function BillingPage() {
               {usageLoading ? (
                 <tr>
                   {Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3 border-t border-ink-200">
+                    <td key={j} className="td">
                       <Skeleton className="h-3 w-full" />
                     </td>
                   ))}
                 </tr>
               ) : selectedOption.monthsAgo === 0 ? (
                 <tr>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                  <td data-label="Period" className="td text-[13px] text-ink-700">
                     {periodLabel}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200">
+                  <td data-label="Status" className="td">
                     <StatePill state="ACTIVE" size="sm" />
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                  <td data-label="Total events" className="td text-[13px] text-ink-700 tabular-nums">
                     {fmtNumber(totalEvents)}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                  <td data-label="Cost" className="td text-[13px] text-ink-700 tabular-nums">
                     {fmtCurrency(totalSpend.value, totalSpend.currency)}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-500">
+                  <td data-label="Invoiced at" className="td text-[13px] text-ink-500">
                     Pending close
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-400">
+                  <td data-label="Actions" className="td text-[13px] text-ink-400">
                     <span title="Coming soon" className="cursor-not-allowed">
                       Download invoice →
                     </span>
@@ -421,22 +421,22 @@ export default function BillingPage() {
                 </tr>
               ) : usageQ.data ? (
                 <tr>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                  <td data-label="Period" className="td text-[13px] text-ink-700">
                     {periodLabel}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200">
+                  <td data-label="Status" className="td">
                     <StatePill state="COMPLETED" size="sm" />
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                  <td data-label="Total events" className="td text-[13px] text-ink-700 tabular-nums">
                     {fmtNumber(totalEvents)}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 tabular-nums">
+                  <td data-label="Cost" className="td text-[13px] text-ink-700 tabular-nums">
                     {fmtCurrency(totalSpend.value, totalSpend.currency)}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                  <td data-label="Invoiced at" className="td text-[13px] text-ink-700">
                     {fmtAbsolute(periodEnd)}
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-400">
+                  <td data-label="Actions" className="td text-[13px] text-ink-400">
                     <span title="Coming soon" className="cursor-not-allowed">
                       Download invoice →
                     </span>

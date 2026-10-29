@@ -122,12 +122,16 @@ export function Sidebar() {
         <div
           onClick={closeSidebar}
           aria-hidden="true"
-          className="fixed inset-0 z-40 bg-ink-900/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-brand-navy/30 backdrop-blur-[2px] lg:hidden animate-fade-in"
         />
       )}
 
       <aside
+        id="dashboard-nav"
+        aria-label="Dashboard navigation"
         data-open={open ? "true" : "false"}
+        // Off-screen on a phone means out of the tab order too.
+        inert={!isDesktop && !open}
         // Below lg the panel slides; from lg it is an in-flow column and must
         // carry no transform at all. Server-rendered as mobile-and-closed,
         // which is the safe initial state on any screen.
@@ -137,36 +141,36 @@ export function Sidebar() {
           // opened, so the main column gets the full viewport width. The slide
           // itself lives in globals.css under .sidebar-panel.
           "sidebar-panel",
-          "fixed inset-y-0 left-0 z-50 w-[17rem] flex flex-col bg-paper border-r border-ink-200",
+          "fixed inset-y-0 left-0 z-50 w-[17rem] max-w-[85vw] flex flex-col bg-bone-50 border-r border-ink-200 shadow-raised lg:shadow-none",
           // From lg it is a normal column again and no transform applies.
-          "lg:static lg:z-auto lg:h-screen lg:flex-shrink-0",
-          collapsed ? "lg:w-16" : "lg:w-60",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:flex-shrink-0",
+          collapsed ? "lg:w-[4.5rem]" : "lg:w-64",
         ].join(" ")}
       >
       {/* Brand */}
       <div
-        className={`py-4 border-b border-ink-200 flex items-center gap-3 ${
-          collapsed ? "lg:justify-center lg:px-0 px-4" : "px-4"
+        className={`pt-5 pb-4 flex items-center gap-3 ${
+          collapsed ? "lg:justify-center lg:px-0 px-5" : "px-5"
         }`}
       >
-        {/* Collapsed rail is 4rem wide — only the tile fits there. */}
+        {/* Collapsed rail is narrow — only the tile fits there. */}
         <div className={collapsed ? "hidden lg:block" : "hidden"}>
           <BrandMark size={36} />
         </div>
         <div className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
-          <BrandLogo height={28} />
-          <div className="mt-1 text-[11px] text-ink-500 truncate" title={tenant?.name ?? ""}>
+          <BrandLogo height={30} />
+          <div className="mt-1.5 text-[12px] text-ink-500 truncate" title={tenant?.name ?? ""}>
             {tenant?.name ?? "—"}
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+      <nav aria-label="Primary" className="flex-1 overflow-y-auto px-3 py-2 space-y-5">
         {NAV.map((group) => (
           <div key={group.label}>
             <div
-              className={`px-2 pb-1 text-[11px] font-mono uppercase tracking-wider text-ink-500 ${
+              className={`px-3 pb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-ink-400 ${
                 collapsed ? "lg:hidden" : ""
               }`}
             >
@@ -182,25 +186,26 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={active ? "page" : undefined}
                     // Tapping a destination on mobile should leave the nav; on
                     // desktop `open` is unused so this is a no-op.
                     onClick={closeSidebar}
                     title={collapsed ? item.label : undefined}
-                    className={`flex items-center gap-2.5 rounded-md text-[13px] transition-colors min-h-[44px] lg:min-h-0 px-2 py-2.5 lg:py-1.5 ${
+                    className={`flex items-center gap-3 rounded-xl text-[14px] tracking-[-0.01em] transition-[background-color,color,box-shadow] duration-150 min-h-[44px] lg:min-h-10 px-3 ${
                       collapsed ? "lg:justify-center lg:px-0" : ""
                     } ${
                       active
-                        ? "bg-bone-100 text-ink-900 font-medium"
-                        : "text-ink-700 hover:bg-bone-100 hover:text-ink-900"
+                        ? "bg-paper text-ink-900 font-medium shadow-sm ring-1 ring-ink-900/5"
+                        : "text-ink-600 hover:bg-ink-900/[0.04] hover:text-ink-900"
                     }`}
                   >
                     <Icon
-                      className={`w-4 h-4 flex-shrink-0 ${active ? "text-ink-900" : "text-ink-500"}`}
+                      className={`w-[18px] h-[18px] flex-shrink-0 ${active ? "text-brand-teal" : "text-ink-400"}`}
                     />
                     <span className={`flex-1 ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
                     {showCount && (
                       <span
-                        className={`text-[10px] font-mono font-medium text-ink-500 ${
+                        className={`min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-signal-500/15 text-[11px] font-medium text-signal-700 tabular-nums ${
                           collapsed ? "lg:hidden" : ""
                         }`}
                       >
@@ -216,8 +221,8 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="border-t border-ink-200 px-3 py-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-ink-700 text-paper flex items-center justify-center text-xs font-medium">
+      <div className={`m-3 p-2 rounded-2xl bg-paper shadow-sm ring-1 ring-ink-900/5 flex items-center gap-3 ${collapsed ? "lg:flex-col lg:gap-1 lg:p-1.5" : ""}`}>
+        <div className="w-9 h-9 rounded-full bg-brand-navy text-paper flex items-center justify-center text-xs font-medium flex-shrink-0">
           {initials(user?.name ?? user?.email ?? "?")}
         </div>
         <div className={`flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
@@ -226,7 +231,7 @@ export function Sidebar() {
         </div>
         <button
           onClick={onLogout}
-          className="p-1.5 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+          className="w-11 h-11 lg:w-9 lg:h-9 flex items-center justify-center flex-shrink-0 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-full transition-colors"
           aria-label="Log out"
           title="Log out"
         >

@@ -117,17 +117,17 @@ export default function SignupPage() {
   const score = scorePassword(draft.password);
 
   return (
-    <main className="min-h-screen bg-bone-50 flex flex-col items-center px-4 py-12">
-      <div className="w-full max-w-[460px]">
-        <div className="mb-8">
+    <main className="auth-canvas min-h-screen flex flex-col items-center px-4 py-[clamp(2rem,1rem+4vw,5rem)]">
+      <div className="w-full max-w-[480px]">
+        <div className="mb-8 flex justify-center">
           <BrandLogo height={36} />
         </div>
 
-        <div className="bg-paper border border-ink-200 rounded-xl p-7">
-          <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">
+        <div className="card rounded-[28px] p-[clamp(1.5rem,1rem+2vw,2.5rem)] shadow-raised animate-dialog-in">
+          <h1 className="page-title">
             Create your workspace
           </h1>
-          <p className="mt-1.5 text-[13px] text-ink-500">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-ink-500">
             Four fields and you&apos;re in. You can set up numbers, regions and session defaults
             later from Settings.
           </p>
@@ -178,13 +178,13 @@ export default function SignupPage() {
                   autoComplete="new-password"
                   onChange={(e) => update("password", e.target.value)}
                   invalid={Boolean(errors.password)}
-                  className="pr-10"
+                  className="pr-11"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-900"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full text-ink-500 hover:text-ink-900"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -204,7 +204,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-ink-900 text-paper h-10 rounded-md font-medium hover:bg-ink-800 transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="btn btn-primary w-full h-11"
             >
               {submitting ? "Creating workspace…" : "Create workspace"}
               {!submitting && <ArrowRight className="w-4 h-4" />}
@@ -212,9 +212,9 @@ export default function SignupPage() {
           </form>
         </div>
 
-        <p className="mt-5 text-center text-[13px] text-ink-500">
+        <p className="mt-6 text-center text-[14px] text-ink-500">
           Already have an account?{" "}
-          <Link href="/login" className="text-ink-900 font-medium hover:underline">
+          <Link href="/login" className="text-ink-900 font-medium hover:text-brand-teal transition-colors">
             Sign in
           </Link>
         </p>
@@ -240,10 +240,10 @@ function Field({
 }) {
   return (
     <div data-field={fieldKey}>
-      <label className="block text-[12px] font-medium text-ink-700 mb-1.5">{label}</label>
+      <label className="field-label">{label}</label>
       {children}
-      {hint && !error && <div className="mt-1 text-[11px] text-ink-500">{hint}</div>}
-      {error && <div className="mt-1 text-[12px] text-red-700">{error}</div>}
+      {hint && !error && <div className="mt-1.5 text-[12px] text-ink-500">{hint}</div>}
+      {error && <div className="mt-1.5 text-[12px] text-red-700">{error}</div>}
     </div>
   );
 }
@@ -266,9 +266,7 @@ function Input({
     <input
       {...props}
       aria-invalid={invalid || undefined}
-      className={`w-full h-9 px-3 border rounded-md bg-paper text-[13px] text-ink-900 placeholder:text-ink-400 outline-none focus:border-ink-900 transition-colors ${
-        invalid ? "border-red-400" : "border-ink-200"
-      } ${className}`}
+      className={`field h-11 ${className}`}
     />
   );
 }

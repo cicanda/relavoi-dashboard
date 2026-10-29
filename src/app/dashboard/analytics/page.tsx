@@ -73,8 +73,8 @@ function ChartTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const displayLabel = labelFormatter && label != null ? labelFormatter(label) : String(label ?? "");
   return (
-    <div className="bg-paper border border-ink-200 rounded-md shadow-card px-3 py-2 text-[12px]">
-      <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500 mb-1">
+    <div className="bg-paper border border-ink-200 rounded-xl shadow-raised px-3.5 py-2.5 text-[12px]">
+      <div className="eyebrow mb-1">
         {displayLabel}
       </div>
       {payload.map((p, i) => (
@@ -111,10 +111,10 @@ function ChartCard({
   empty?: boolean;
 }) {
   return (
-    <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-      <h2 className="text-sm font-semibold text-ink-900 mb-3">{title}</h2>
+    <div className="card p-5 h-full">
+      <h2 className="section-title mb-4">{title}</h2>
       {loading ? (
-        <div className="rounded animate-shimmer" style={{ height }} />
+        <div className="rounded-xl animate-shimmer" style={{ height }} />
       ) : error ? (
         <div
           className="flex flex-col items-center justify-center gap-2 text-sm text-ink-500"
@@ -124,7 +124,7 @@ function ChartCard({
           {onRetry && (
             <button
               onClick={onRetry}
-              className="px-3 py-1 text-[12px] bg-paper border border-ink-200 rounded-md text-ink-700 hover:bg-bone-100"
+              className="btn btn-secondary btn-sm"
             >
               Retry
             </button>
@@ -269,18 +269,16 @@ export default function AnalyticsPage() {
       />
 
       {/* Period selector */}
-      <div className="mb-5 inline-flex rounded-md overflow-hidden border border-ink-200">
-        {RANGES.map((r, i) => {
+      <div className="mb-5 segmented max-w-full overflow-x-auto">
+        {RANGES.map((r) => {
           const selected = r.key === rangeKey;
           return (
             <button
               key={r.key}
               onClick={() => setRangeKey(r.key)}
-              className={`px-3 py-1.5 text-[13px] transition-colors ${
-                selected
-                  ? "bg-ink-900 text-paper"
-                  : "bg-paper text-ink-700 hover:bg-bone-100"
-              } ${i > 0 ? "border-l border-ink-200" : ""}`}
+              data-active={selected}
+              aria-pressed={selected}
+              className="segmented-item shrink-0"
             >
               {r.label}
             </button>
@@ -289,7 +287,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Summary stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div className="tray grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 mb-5 [&>*]:min-w-0">
         <StatCard
           label="Total Calls"
           value={callsQ.isLoading ? "" : fmtNumber(totalCalls)}
@@ -324,24 +322,24 @@ export default function AnalyticsPage() {
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={callVolumeData} margin={{ top: 5, right: 12, bottom: 0, left: 0 }}>
-              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="#E8E4DD" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="ts"
                 tick={AXIS_TICK}
                 tickFormatter={xLabelFormatter}
-                axisLine={{ stroke: "#E2E8F0" }}
+                axisLine={{ stroke: "#E8E4DD" }}
                 tickLine={false}
                 minTickGap={24}
               />
               <YAxis
                 tick={AXIS_TICK}
-                axisLine={{ stroke: "#E2E8F0" }}
+                axisLine={{ stroke: "#E8E4DD" }}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
                 content={<ChartTooltip labelFormatter={xLabelFormatter} />}
-                cursor={{ stroke: "#E2E8F0", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#E8E4DD", strokeDasharray: "3 3" }}
               />
               <Legend
                 wrapperStyle={{
@@ -382,7 +380,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Two-column row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 [&>*]:min-w-0">
         <ChartCard
           title="Call Direction"
           height={260}
@@ -435,24 +433,24 @@ export default function AnalyticsPage() {
               data={sessionSeriesData}
               margin={{ top: 5, right: 12, bottom: 0, left: 0 }}
             >
-              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="#E8E4DD" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="ts"
                 tick={AXIS_TICK}
                 tickFormatter={xLabelFormatter}
-                axisLine={{ stroke: "#E2E8F0" }}
+                axisLine={{ stroke: "#E8E4DD" }}
                 tickLine={false}
                 minTickGap={24}
               />
               <YAxis
                 tick={AXIS_TICK}
-                axisLine={{ stroke: "#E2E8F0" }}
+                axisLine={{ stroke: "#E8E4DD" }}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
                 content={<ChartTooltip labelFormatter={xLabelFormatter} />}
-                cursor={{ stroke: "#E2E8F0", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#E8E4DD", strokeDasharray: "3 3" }}
               />
               <Line
                 type="monotone"

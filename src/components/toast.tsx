@@ -42,7 +42,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+      <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-[60] flex flex-col items-end gap-2 sm:max-w-sm" aria-live="polite">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={() => setToasts((p) => p.filter((x) => x.id !== t.id))} />
         ))}
@@ -70,14 +70,14 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <div
-      className={`bg-paper border border-ink-200 ${accent} border-l-4 rounded-lg shadow-card p-3 flex items-start gap-3`}
+      className={`w-full bg-paper border border-ink-200 ${accent} border-l-4 rounded-2xl shadow-raised p-3.5 flex items-start gap-3 animate-toast-in`}
     >
       <Icon className={`w-5 h-5 ${iconColor} flex-shrink-0 mt-0.5`} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-ink-900">{toast.title}</div>
-        {toast.description && <div className="text-xs text-ink-500 mt-0.5">{toast.description}</div>}
+        {toast.description && <div className="text-[13px] text-ink-500 mt-0.5">{toast.description}</div>}
       </div>
-      <button onClick={onDismiss} className="text-ink-400 hover:text-ink-700 transition-colors">
+      <button onClick={onDismiss} aria-label="Dismiss" className="-m-1.5 p-1.5 rounded-full text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors">
         <X className="w-4 h-4" />
       </button>
     </div>

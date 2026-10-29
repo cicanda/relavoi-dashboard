@@ -70,7 +70,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="p-1 text-ink-400 hover:text-ink-700 transition-colors opacity-0 group-hover:opacity-100"
+      className="p-1 rounded-md text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       aria-label="Copy"
     >
       {copied ? (
@@ -169,7 +169,7 @@ export default function SessionsListPage() {
           canWrite ? (
             <button
               onClick={() => setCreateOpen(true)}
-              className="bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm inline-flex items-center gap-1.5"
+              className="btn btn-primary"
             >
               <Plus className="w-4 h-4" /> New session
             </button>
@@ -178,14 +178,14 @@ export default function SessionsListPage() {
       />
 
       {/* Filter bar */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-4 mb-4">
+      <div className="card p-3 sm:p-4 mb-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* State filter */}
           <div className="relative">
             <select
               value={stateFilter}
               onChange={(e) => setStateFilter(e.target.value)}
-              className="appearance-none bg-paper border border-ink-200 text-ink-700 text-sm pl-3 pr-8 h-9 rounded-md hover:bg-bone-100 transition-colors font-mono uppercase tracking-wider text-[11px]"
+              className="appearance-none field w-auto pl-3.5 pr-9 text-[13px] cursor-pointer"
             >
               {STATE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -197,23 +197,21 @@ export default function SessionsListPage() {
           </div>
 
           {/* Period pills */}
-          <div className="flex items-center gap-1 bg-bone-100 rounded-md p-0.5">
+          <div className="segmented">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 h-8 rounded text-[11px] font-mono uppercase tracking-wider transition-colors ${
-                  period === p.value
-                    ? "bg-paper text-ink-900 shadow-sm"
-                    : "text-ink-500 hover:text-ink-700"
-                }`}
+                data-active={period === p.value}
+                aria-pressed={period === p.value}
+                className="segmented-item"
               >
                 {p.label}
               </button>
             ))}
           </div>
 
-          <div className="ml-auto text-xs text-ink-500 font-mono">
+          <div className="ml-auto text-[13px] text-ink-500 tabular-nums">
             {rows.length} {rows.length === 1 ? "session" : "sessions"} shown
           </div>
         </div>
@@ -225,7 +223,7 @@ export default function SessionsListPage() {
           unreadable -- unacceptable for the screen a seller runs a delivery
           from. The states around the rows (loading, error, empty) are rendered
           once and work at any width. */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
+      <div className="card">
         {isLoadingFirstPage ? (
           <LoadingRows />
         ) : q.error && rows.length === 0 ? (
@@ -233,7 +231,7 @@ export default function SessionsListPage() {
             <div className="text-red-700 mb-2">Failed to load sessions</div>
             <button
               onClick={() => q.refetch()}
-              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
+              className="btn btn-secondary btn-sm"
             >
               Retry
             </button>
@@ -243,7 +241,7 @@ export default function SessionsListPage() {
         ) : (
           <>
             {/* Phones */}
-            <div className="sm:hidden divide-y divide-ink-200">
+            <div className="sm:hidden divide-y divide-ink-200 [&>*:first-child]:rounded-t-card [&>*:last-child]:rounded-b-card">
               {rows.map((s) => (
                 <SessionCard key={s.id} session={s} onOpen={() => open(s.id)} />
               ))}
@@ -251,7 +249,7 @@ export default function SessionsListPage() {
 
             {/* Tablet and up */}
             <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-compact table-grid-md">
                 <thead>
                   <tr>
                     {[
@@ -267,7 +265,7 @@ export default function SessionsListPage() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2 whitespace-nowrap"
+                        className="th whitespace-nowrap"
                       >
                         {h}
                       </th>
@@ -279,39 +277,39 @@ export default function SessionsListPage() {
                     <tr
                       key={s.id}
                       onClick={() => open(s.id)}
-                      className="group cursor-pointer hover:bg-bone-100 transition-colors"
+                      className="group row-link"
                     >
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                      <td data-label="Session ID" className="td text-[13px] text-ink-700">
                         <div className="flex items-center gap-1">
                           <span className="font-mono">{truncId(s.id)}</span>
                           <CopyButton text={s.id} />
                         </div>
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 max-w-[180px] truncate">
+                      <td data-label="Reference" className="td text-[13px] text-ink-700 max-w-[180px] truncate">
                         {referenceOf(s) ?? <span className="text-ink-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono whitespace-nowrap">
+                      <td data-label="Proxy" className="td text-[13px] text-ink-700 font-mono whitespace-nowrap">
                         {s.proxyNumber}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono whitespace-nowrap">
+                      <td data-label="Customer" className="td text-[13px] text-ink-700 font-mono whitespace-nowrap">
                         {s.customerPhoneMasked ?? <span className="text-ink-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
+                      <td data-label="Status" className="td text-[13px]">
                         <StatePill state={s.state as SessionState} size="sm" />
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                      <td data-label="Dir" className="td text-[13px] text-ink-700">
                         <DirectionIcon mode={s.directionMode} />
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                      <td data-label="Calls" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                         {s.callCount ?? 0}
                       </td>
-                      <td
-                        className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 whitespace-nowrap"
+                      <td data-label="Created"
+                        className="td text-[13px] text-ink-700 whitespace-nowrap"
                         title={fmtAbsolute(s.createdAt)}
                       >
                         {fmtRelative(s.createdAt)}
                       </td>
-                      <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 whitespace-nowrap">
+                      <td data-label="Expires" className="td text-[13px] text-ink-700 whitespace-nowrap">
                         {fmtRelative(s.expiresAt)}
                       </td>
                     </tr>
@@ -324,13 +322,13 @@ export default function SessionsListPage() {
 
         {/* Load more */}
         {(canLoadMore || q.isFetching) && rows.length > 0 && (
-          <div className="px-4 py-3 border-t border-ink-200 flex items-center justify-center">
+          <div className="td flex items-center justify-center">
             <button
               disabled={!canLoadMore}
               onClick={() => {
                 if (lastAfter) setActiveAfter(lastAfter);
               }}
-              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-secondary btn-sm"
             >
               {q.isFetching ? "Loading..." : "Load more"}
             </button>
@@ -360,7 +358,7 @@ function SessionCard({ session, onOpen }: { session: Session; onOpen: () => void
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left px-4 py-3.5 active:bg-bone-100 transition-colors"
+      className="w-full text-left px-4 py-4 active:bg-bone-50 transition-colors"
     >
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-ink-900 truncate">
@@ -370,11 +368,11 @@ function SessionCard({ session, onOpen }: { session: Session; onOpen: () => void
         <ChevronRight className="w-4 h-4 text-ink-400 ml-auto shrink-0" />
       </div>
       <div className="mt-2 flex items-baseline gap-2 flex-wrap">
-        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">Number</span>
-        <span className="text-[15px] font-mono text-ink-900">{session.proxyNumber}</span>
+        <span className="eyebrow">Number</span>
+        <span className="text-[15px] font-mono text-ink-900 break-all">{session.proxyNumber}</span>
       </div>
       <div className="mt-1 flex items-baseline gap-2 flex-wrap text-[13px]">
-        <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">
+        <span className="eyebrow">
           Customer
         </span>
         <span className="font-mono text-ink-700">{session.customerPhoneMasked ?? "—"}</span>
@@ -403,17 +401,17 @@ function LoadingRows() {
 function EmptyState({ canWrite, onCreate }: { canWrite: boolean; onCreate: () => void }) {
   return (
     <div className="px-4 py-16 flex flex-col items-center text-center">
-      <div className="w-16 h-16 rounded-full bg-bone-100 flex items-center justify-center mb-4">
+      <div className="w-16 h-16 rounded-full bg-bone-100 ring-8 ring-bone-50 flex items-center justify-center mb-5">
         <ActivityIcon className="w-7 h-7 text-ink-400" />
       </div>
-      <h3 className="text-base font-semibold text-ink-900 mb-1">No sessions yet</h3>
-      <p className="text-sm text-ink-500 max-w-md">
+      <h3 className="section-title mb-1">No sessions yet</h3>
+      <p className="text-[14px] text-ink-500 max-w-md">
         Start one here, or let your integration create them.
       </p>
       {canWrite && (
         <button
           onClick={onCreate}
-          className="mt-5 bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm inline-flex items-center gap-1.5"
+          className="btn btn-primary mt-5"
         >
           <Plus className="w-4 h-4" /> New session
         </button>

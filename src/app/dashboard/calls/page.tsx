@@ -89,7 +89,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="p-1 text-ink-400 hover:text-ink-700 transition-colors opacity-0 group-hover:opacity-100"
+      className="p-1 rounded-md text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       aria-label="Copy"
     >
       {copied ? (
@@ -192,13 +192,13 @@ export default function CallsHistoryPage() {
       <PageHeader title="Call History" description="Every routed call across your sessions" />
 
       {/* Filter bar */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-4 mb-4">
+      <div className="card p-3 sm:p-4 mb-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="appearance-none bg-paper border border-ink-200 text-ink-700 text-sm pl-3 pr-8 h-9 rounded-md hover:bg-bone-100 transition-colors font-mono uppercase tracking-wider text-[11px]"
+              className="appearance-none field w-auto pl-3.5 pr-9 text-[13px] cursor-pointer"
             >
               {STATUSES.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -213,7 +213,7 @@ export default function CallsHistoryPage() {
             <select
               value={direction}
               onChange={(e) => setDirection(e.target.value)}
-              className="appearance-none bg-paper border border-ink-200 text-ink-700 text-sm pl-3 pr-8 h-9 rounded-md hover:bg-bone-100 transition-colors font-mono uppercase tracking-wider text-[11px]"
+              className="appearance-none field w-auto pl-3.5 pr-9 text-[13px] cursor-pointer"
             >
               {DIRECTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -224,30 +224,28 @@ export default function CallsHistoryPage() {
             <ChevronDown className="w-3 h-3 text-ink-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          <div className="flex items-center gap-1 bg-bone-100 rounded-md p-0.5">
+          <div className="segmented">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 h-8 rounded text-[11px] font-mono uppercase tracking-wider transition-colors ${
-                  period === p.value
-                    ? "bg-paper text-ink-900 shadow-sm"
-                    : "text-ink-500 hover:text-ink-700"
-                }`}
+                data-active={period === p.value}
+                aria-pressed={period === p.value}
+                className="segmented-item"
               >
                 {p.label}
               </button>
             ))}
           </div>
 
-          <div className="ml-auto text-xs text-ink-500 font-mono">
+          <div className="ml-auto text-[13px] text-ink-500 tabular-nums">
             {rows.length} loaded
           </div>
         </div>
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="tray grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 mb-4 [&>*]:min-w-0">
         <StatCard
           label="Total Calls"
           value={isLoadingFirstPage ? "" : fmtNumber(stats.total)}
@@ -287,9 +285,9 @@ export default function CallsHistoryPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
+      <div className="card">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-stack">
             <thead>
               <tr>
                 {[
@@ -303,7 +301,7 @@ export default function CallsHistoryPage() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2"
+                    className="th"
                   >
                     {h}
                   </th>
@@ -322,7 +320,7 @@ export default function CallsHistoryPage() {
                     <div className="text-red-700 mb-2">Failed to load calls</div>
                     <button
                       onClick={() => q.refetch()}
-                      className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
+                      className="btn btn-secondary btn-sm"
                     >
                       Retry
                     </button>
@@ -336,32 +334,32 @@ export default function CallsHistoryPage() {
                 </tr>
               ) : (
                 rows.map((c) => (
-                  <tr key={c.id} className="group hover:bg-bone-100 transition-colors">
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                  <tr key={c.id} className="group hover:bg-bone-50 transition-colors">
+                    <td data-label="Proxy" className="td text-[13px] text-ink-700 font-mono">
                       {c.proxyNumber ?? "—"}
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                    <td data-label="Dir" className="td text-[13px] text-ink-700">
                       <DirectionGlyph direction={c.direction} />
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
+                    <td data-label="Status" className="td text-[13px]">
                       <StatePill state={c.status} size="sm" />
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                    <td data-label="Duration" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                       {fmtDuration(c.durationSeconds)}
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                    <td data-label="Call ID" className="td text-[13px] text-ink-700">
                       <div className="flex items-center gap-1">
                         <span className="font-mono">{truncId(c.id)}</span>
                         <CopyButton text={c.id} />
                       </div>
                     </td>
-                    <td
-                      className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                    <td data-label="Time"
+                      className="td text-[13px] text-ink-700"
                       title={fmtAbsolute(c.initiatedAt)}
                     >
                       {fmtRelative(c.initiatedAt)}
                     </td>
-                    <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                    <td data-label="Session" className="td text-[13px] text-ink-700">
                       {c.sessionId ? (
                         <Link
                           href={`/dashboard/sessions/${c.sessionId}`}
@@ -381,13 +379,13 @@ export default function CallsHistoryPage() {
         </div>
 
         {(canLoadMore || q.isFetching) && rows.length > 0 && (
-          <div className="px-4 py-3 border-t border-ink-200 flex items-center justify-center">
+          <div className="td flex items-center justify-center">
             <button
               disabled={!canLoadMore}
               onClick={() => {
                 if (lastAfter) setActiveAfter(lastAfter);
               }}
-              className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-secondary btn-sm"
             >
               {q.isFetching ? "Loading..." : "Load more"}
             </button>
@@ -401,11 +399,11 @@ export default function CallsHistoryPage() {
 function EmptyState() {
   return (
     <div className="px-4 py-16 flex flex-col items-center text-center">
-      <div className="w-20 h-20 rounded-full bg-bone-100 flex items-center justify-center mb-4">
+      <div className="w-20 h-20 rounded-full bg-bone-100 ring-8 ring-bone-50 flex items-center justify-center mb-5">
         <Phone className="w-9 h-9 text-ink-300" />
       </div>
-      <h3 className="text-base font-semibold text-ink-900 mb-1">No calls in this range</h3>
-      <p className="text-sm text-ink-500 max-w-md">
+      <h3 className="section-title mb-1">No calls in this range</h3>
+      <p className="text-[14px] text-ink-500 max-w-md">
         Try widening the time period or clearing your filters.
       </p>
     </div>

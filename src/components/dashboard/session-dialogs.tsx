@@ -59,18 +59,18 @@ function Sheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex sm:items-center sm:justify-center bg-ink-900/40 sm:p-4"
+      className="fixed inset-0 z-50 flex sm:items-center sm:justify-center bg-brand-navy/40 backdrop-blur-[2px] sm:p-4 animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
         ref={panelRef}
-        className="bg-paper w-full h-dvh sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:border sm:border-ink-200 sm:rounded-[10px] sm:shadow-card flex flex-col"
+        className="bg-paper w-full h-dvh sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-[24px] sm:shadow-raised sm:ring-1 sm:ring-ink-900/5 flex flex-col animate-dialog-in"
       >
-        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-ink-200 sm:border-b-0">
+        <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-ink-200 sm:border-b-0">
           <div className="min-w-0">
-            <h2 className="text-base font-semibold text-ink-900">{title}</h2>
+            <h2 className="section-title">{title}</h2>
             {description && <p className="text-[13px] text-ink-500 mt-1">{description}</p>}
           </div>
           <button
@@ -78,21 +78,21 @@ function Sheet({
             onClick={onClose}
             disabled={busy}
             aria-label="Close"
-            className="shrink-0 p-1 rounded text-ink-400 hover:text-ink-700 transition-colors disabled:opacity-50"
+            className="shrink-0 -m-1.5 w-10 h-10 flex items-center justify-center rounded-full text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors disabled:opacity-50"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div
-          className={`px-5 py-4 flex-1 overflow-y-auto ${
+          className={`px-5 sm:px-6 py-4 flex-1 overflow-y-auto ${
             center ? "flex flex-col justify-center sm:block" : ""
           }`}
         >
           {children}
         </div>
 
-        <div className="px-5 py-4 border-t border-ink-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <div className="px-5 sm:px-6 py-4 border-t border-ink-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
           {footer}
         </div>
       </div>
@@ -102,7 +102,7 @@ function Sheet({
 
 function SandboxNote() {
   return (
-    <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-md px-3 py-2 text-[13px]">
+    <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3.5 py-2.5 text-[13px]">
       {SANDBOX_NOTE}
     </div>
   );
@@ -110,7 +110,7 @@ function SandboxNote() {
 
 function FormError({ message }: { message: string }) {
   return (
-    <div className="bg-red-50 border border-red-200 text-red-800 rounded-md px-3 py-2 text-[13px]">
+    <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl px-3.5 py-2.5 text-[13px]">
       {message}
     </div>
   );
@@ -130,7 +130,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
           /* a clipboard the browser refuses is not worth an error toast */
         }
       }}
-      className="inline-flex items-center gap-1.5 bg-paper border border-ink-200 text-ink-700 px-3 h-10 rounded-md hover:bg-bone-100 text-sm transition-colors"
+      className="btn btn-secondary"
     >
       {copied ? <Check className="w-4 h-4 text-signal-600" /> : <Copy className="w-4 h-4" />}
       {copied ? "Copied" : label}
@@ -163,7 +163,7 @@ export function PhoneField({
   const shown = error ?? n.problem;
   return (
     <label className="block">
-      <span className="block text-[13px] font-medium text-ink-700 mb-1.5">{label}</span>
+      <span className="field-label">{label}</span>
       <input
         type="tel"
         inputMode="tel"
@@ -172,9 +172,7 @@ export function PhoneField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={NG_EXAMPLE}
         aria-invalid={shown ? true : undefined}
-        className={`w-full bg-paper border rounded-md px-3 h-11 text-[15px] font-mono text-ink-900 placeholder:text-ink-400 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-signal-500/30 ${
-          shown ? "border-red-300" : "border-ink-200"
-        }`}
+        className="field h-11 text-[15px] font-mono placeholder:font-sans"
       />
       <div className="mt-1.5 min-h-[18px] text-[12px]">
         {shown ? (
@@ -267,7 +265,7 @@ export function CreateSessionDialog({
             <button
               type="button"
               onClick={() => onOpenSession(created)}
-              className="bg-ink-900 text-paper px-4 h-11 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm"
+              className="btn btn-primary"
             >
               Open session
             </button>
@@ -275,7 +273,7 @@ export function CreateSessionDialog({
         }
       >
         <div className="text-center py-4">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500">
+          <div className="eyebrow">
             Relavoi number
           </div>
           <div className="mt-2 text-[30px] sm:text-[34px] leading-tight font-mono text-ink-900 tabular-nums break-all">
@@ -302,7 +300,7 @@ export function CreateSessionDialog({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="bg-paper border border-ink-200 text-ink-700 px-4 h-11 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50"
+            className="btn btn-secondary"
           >
             Cancel
           </button>
@@ -310,7 +308,7 @@ export function CreateSessionDialog({
             type="button"
             onClick={onSubmit}
             disabled={busy}
-            className="bg-ink-900 text-paper px-4 h-11 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm disabled:opacity-50"
+            className="btn btn-primary"
           >
             {busy ? "Starting…" : "Start session"}
           </button>
@@ -341,7 +339,7 @@ export function CreateSessionDialog({
         />
 
         <label className="block">
-          <span className="block text-[13px] font-medium text-ink-700 mb-1.5">
+          <span className="field-label">
             Order reference <span className="text-ink-400 font-normal">(optional)</span>
           </span>
           <input
@@ -350,7 +348,7 @@ export function CreateSessionDialog({
             onChange={(e) => setReference(e.target.value)}
             placeholder="ORD-9281"
             maxLength={64}
-            className="w-full bg-paper border border-ink-200 rounded-md px-3 h-11 text-[15px] text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-signal-500/30"
+            className="field h-11 text-[15px]"
           />
           <span className="block mt-1.5 text-[12px] text-ink-400">
             Shown on the session list so you can find this delivery again.
@@ -358,17 +356,17 @@ export function CreateSessionDialog({
         </label>
 
         <fieldset>
-          <legend className="block text-[13px] font-medium text-ink-700 mb-1.5">
+          <legend className="field-label">
             Who can call whom
           </legend>
           <div className="space-y-2">
             {DIRECTIONS.map((d) => (
               <label
                 key={d.value}
-                className={`flex items-center gap-2.5 border rounded-md px-3 h-11 cursor-pointer transition-colors ${
+                className={`flex items-center gap-2.5 border rounded-xl px-3.5 h-11 cursor-pointer transition-colors ${
                   direction === d.value
-                    ? "border-ink-900 bg-bone-100"
-                    : "border-ink-200 hover:bg-bone-100"
+                    ? "border-ink-900 bg-bone-50 ring-1 ring-ink-900"
+                    : "border-ink-200 hover:bg-bone-50"
                 }`}
               >
                 <input
@@ -424,7 +422,7 @@ export function EndSessionDialog({
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="bg-paper border border-ink-200 text-ink-700 px-4 h-11 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50"
+            className="btn btn-secondary"
           >
             Keep it open
           </button>
@@ -432,7 +430,7 @@ export function EndSessionDialog({
             type="button"
             onClick={() => onConfirm(cutNow ? 0 : undefined)}
             disabled={busy}
-            className="bg-red-50 text-red-700 border border-red-200 px-4 h-11 rounded-md hover:bg-red-100 font-medium text-sm disabled:opacity-50"
+            className="btn h-11 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
           >
             {busy ? "Ending…" : "End session"}
           </button>
@@ -473,8 +471,8 @@ function Choice({
 }) {
   return (
     <label
-      className={`flex items-start gap-2.5 border rounded-md px-3 py-3 cursor-pointer transition-colors ${
-        selected ? "border-ink-900 bg-bone-100" : "border-ink-200 hover:bg-bone-100"
+      className={`flex items-start gap-2.5 border rounded-xl px-3.5 py-3 cursor-pointer transition-colors ${
+        selected ? "border-ink-900 bg-bone-50 ring-1 ring-ink-900" : "border-ink-200 hover:bg-bone-50"
       }`}
     >
       <input
@@ -544,7 +542,7 @@ export function ChangeCustomerDialog({
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="bg-paper border border-ink-200 text-ink-700 px-4 h-11 rounded-md hover:bg-bone-100 text-sm transition-colors disabled:opacity-50"
+            className="btn btn-secondary"
           >
             Cancel
           </button>
@@ -552,7 +550,7 @@ export function ChangeCustomerDialog({
             type="button"
             onClick={onSubmit}
             disabled={busy}
-            className="bg-ink-900 text-paper px-4 h-11 rounded-md font-medium hover:bg-ink-800 transition-colors text-sm disabled:opacity-50"
+            className="btn btn-primary"
           >
             {busy ? "Changing…" : "Change customer"}
           </button>

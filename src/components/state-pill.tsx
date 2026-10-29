@@ -23,10 +23,10 @@ export function StatePill({
 }) {
   const cfg = MAP[state] ?? { bg: "bg-ink-200", text: "text-ink-700", dot: "bg-ink-400" };
   const label = cfg.label ?? state;
-  const padding = size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-[11px]";
+  const padding = size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 ${cfg.bg} ${cfg.text} ${padding} rounded-md font-mono uppercase tracking-wider font-medium`}
+      className={`inline-flex items-center gap-1.5 ${cfg.bg} ${cfg.text} ${padding} rounded-full font-medium uppercase tracking-[0.04em] whitespace-nowrap`}
     >
       <span
         className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${state === "ACTIVE" ? "animate-pulse-dot" : ""}`}

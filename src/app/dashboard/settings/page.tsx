@@ -97,7 +97,7 @@ export default function SettingsPage() {
     return (
       <>
         <PageHeader title="Settings" description="Workspace, team, and account preferences." />
-        <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-6 text-sm text-ink-700">
+        <div className="card p-6 text-sm text-ink-700">
           Could not load workspace settings. Refresh the page or contact support.
         </div>
       </>
@@ -167,35 +167,37 @@ function Card({
   footer?: ReactNode;
 }) {
   return (
-    <section className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-5">
-      <div className="mb-4">
-        <h2 className="text-base font-semibold text-ink-900">{title}</h2>
-        {description && <p className="text-sm text-ink-500 mt-1">{description}</p>}
+    <section className="card p-[clamp(1.125rem,0.8rem+1.2vw,1.75rem)] xl:grid xl:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] xl:gap-x-10">
+      <div className="mb-5 xl:mb-0">
+        <h2 className="section-title">{title}</h2>
+        {description && <p className="text-[14px] text-ink-500 mt-1.5">{description}</p>}
       </div>
-      <div className="space-y-4">{children}</div>
-      {footer && <div className="mt-4 pt-4 border-t border-ink-200 flex justify-end">{footer}</div>}
+      <div className="min-w-0">
+        <div className="space-y-4">{children}</div>
+        {footer && <div className="mt-5 pt-4 border-t border-ink-200 flex justify-end">{footer}</div>}
+      </div>
     </section>
   );
 }
 
 function Label({ children }: { children: ReactNode }) {
-  return <label className="block text-[12px] font-medium text-ink-700 mb-1.5">{children}</label>;
+  return <label className="field-label">{children}</label>;
 }
 
 function Hint({ children }: { children: ReactNode }) {
-  return <div className="mt-1 text-[11px] text-ink-500">{children}</div>;
+  return <div className="mt-1.5 text-[12px] text-ink-500">{children}</div>;
 }
 
 const inputClass =
-  "w-full h-9 px-3 border border-ink-200 rounded-md text-[13px] focus:outline-none focus:border-signal-500 focus:ring-1 focus:ring-signal-500/30 transition-colors";
+  "field w-full";
 
 const selectClass = `${inputClass} bg-paper`;
 
 const primaryBtn =
-  "bg-ink-900 text-paper px-4 h-10 rounded-md font-medium hover:bg-ink-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  "btn btn-primary";
 
 const secondaryBtn =
-  "bg-paper border border-ink-200 text-ink-700 px-4 h-10 rounded-md hover:bg-bone-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  "btn btn-secondary";
 
 // ─── General ────────────────────────────────────────────────────────────────
 
@@ -228,7 +230,7 @@ function GeneralCard({
         </button>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Tenant name</Label>
           <input
@@ -240,7 +242,7 @@ function GeneralCard({
         </div>
         <div>
           <Label>Plan tier</Label>
-          <div className="h-9 flex items-center">
+          <div className="h-10 flex items-center">
             <TierBadge tier={tenant.tier} />
           </div>
         </div>
@@ -255,13 +257,13 @@ function GeneralCard({
 
 function TierBadge({ tier }: { tier: Tier }) {
   const styles: Record<Tier, string> = {
-    STARTER: "bg-ink-200 text-ink-700",
+    STARTER: "bg-bone-200 text-ink-700",
     GROWTH: "bg-blue-500/15 text-blue-700",
     ENTERPRISE: "bg-signal-500/20 text-signal-700",
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-md font-mono text-[11px] uppercase tracking-wider font-medium ${styles[tier]}`}
+      className={`chip ${styles[tier]}`}
     >
       {tier}
     </span>
@@ -280,14 +282,14 @@ function CopyableMono({ value }: { value: string }) {
     }
   }
   return (
-    <div className="flex items-stretch">
-      <code className="flex-1 min-w-0 bg-bone-100 border border-ink-200 rounded-l-md px-3 py-2 text-[12px] font-mono text-ink-900 break-all">
+    <div className="flex items-center gap-2">
+      <code className="flex-1 min-w-0 bg-bone-50 border border-ink-200 rounded-lg px-3 py-2.5 text-[12px] font-mono text-ink-900 break-all">
         {value}
       </code>
       <button
         type="button"
         onClick={copy}
-        className="px-3 border border-l-0 border-ink-200 rounded-r-md bg-paper text-ink-700 hover:bg-bone-100 transition-colors inline-flex items-center gap-1.5 text-[12px]"
+        className="btn btn-secondary btn-sm shrink-0"
       >
         {copied ? <Check className="w-4 h-4 text-signal-700" /> : <Copy className="w-4 h-4" />}
         {copied ? "Copied" : "Copy"}
@@ -307,40 +309,40 @@ function TeamCard() {
       title="Team members"
       description="Invite teammates to collaborate on your workspace."
     >
-      <div className="overflow-x-auto -mx-1">
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-xl border border-ink-200">
+        <table className="w-full table-stack">
           <thead>
             <tr>
-              <th className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left">
+              <th className="th">
                 Name
               </th>
-              <th className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left">
+              <th className="th">
                 Email
               </th>
-              <th className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left">
+              <th className="th">
                 Role
               </th>
-              <th className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left">
+              <th className="th">
                 Invited at
               </th>
-              <th className="bg-bone-100 px-4 py-2 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left">
+              <th className="th">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="hover:bg-bone-100 transition-colors">
-              <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+            <tr className="hover:bg-bone-50 transition-colors">
+              <td data-label="Name" className="td text-[13px] text-ink-700">
                 {user?.name ?? "—"}
               </td>
-              <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+              <td data-label="Email" className="td text-[13px] text-ink-700">
                 {user?.email ?? "—"}
               </td>
-              <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+              <td data-label="Role" className="td text-[13px] text-ink-700">
                 <RolePill role={user?.role ?? "VIEWER"} />
               </td>
-              <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">—</td>
-              <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-500">
+              <td data-label="Invited at" className="td text-[13px] text-ink-700">—</td>
+              <td data-label="Actions" className="td text-[13px] text-ink-500">
                 You
               </td>
             </tr>
@@ -363,12 +365,12 @@ function RolePill({ role }: { role: Role }) {
   const styles: Record<Role, string> = {
     OWNER: "bg-signal-500/15 text-signal-700",
     ADMIN: "bg-blue-500/15 text-blue-700",
-    DEVELOPER: "bg-amber-500/15 text-amber-700",
+    DEVELOPER: "bg-brand-amber/15 text-amber-700",
     VIEWER: "bg-ink-200 text-ink-700",
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-md font-mono text-[11px] uppercase tracking-wider font-medium ${styles[role]}`}
+      className={`chip ${styles[role]}`}
     >
       {role}
     </span>
@@ -402,11 +404,11 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink-900/70 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-paper border border-ink-200 rounded-[10px] shadow-card p-6">
+    <div className="fixed inset-0 z-50 bg-brand-navy/40 backdrop-blur-[2px] flex items-center justify-center px-4 animate-fade-in">
+      <div className="w-full max-w-md dialog animate-dialog-in p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-ink-900">Invite team member</h3>
+            <h3 className="section-title">Invite team member</h3>
             <p className="text-sm text-ink-500 mt-1">
               They will receive a temporary password to sign in with.
             </p>
@@ -414,7 +416,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-ink-400 hover:text-ink-900 transition-colors"
+            className="-m-1.5 w-10 h-10 flex items-center justify-center rounded-full text-ink-400 hover:text-ink-900 hover:bg-bone-100 transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -461,7 +463,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="bg-signal-500/10 border border-signal-500/30 rounded-md px-3 py-2 text-[13px] text-signal-700">
+            <div className="bg-signal-500/10 border border-signal-500/30 rounded-xl px-3.5 py-2.5 text-[13px] text-signal-700">
               Invite created. Share the temporary password securely — it will not be shown
               again.
             </div>
@@ -524,7 +526,7 @@ function SessionDefaultsCard({
         </button>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Default grace period (min)</Label>
           <input
@@ -623,7 +625,7 @@ function RecordingCard({
         onChange={setEnabled}
         description="When enabled, calls are recorded and stored against your retention policy."
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Consent prompt mode</Label>
           <select
@@ -668,23 +670,28 @@ function Toggle({
   return (
     <label className="flex items-start justify-between gap-4 cursor-pointer">
       <div className="min-w-0">
-        <div className="text-[13px] font-medium text-ink-900">{label}</div>
-        {description && <div className="text-[12px] text-ink-500 mt-0.5">{description}</div>}
+        <div className="text-[14px] font-medium text-ink-900">{label}</div>
+        {description && <div className="text-[13px] text-ink-500 mt-0.5">{description}</div>}
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors mt-0.5 ${
-          checked ? "bg-signal-500" : "bg-ink-300"
-        }`}
+        className="relative inline-flex h-11 w-14 -my-2 -mr-1.5 flex-shrink-0 items-center justify-center rounded-full"
       >
+        {/* The visible track; the button around it is the 44px tap target. */}
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-paper shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            checked ? "bg-signal-500" : "bg-ink-300"
           }`}
-        />
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-paper shadow transition-transform duration-200 ${
+              checked ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
+        </span>
       </button>
     </label>
   );
@@ -878,17 +885,17 @@ function WorkspaceSetupCard({
           type="button"
           onClick={onSubmit}
           disabled={saving}
-          className="bg-ink-900 text-paper px-4 h-9 rounded-md text-[13px] font-medium hover:bg-ink-800 transition-colors disabled:opacity-60"
+          className="btn btn-primary btn-sm"
         >
           {saving ? "Saving…" : "Save workspace setup"}
         </button>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Industry</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px]"
+            className="field w-full"
             value={industry}
             placeholder="Delivery"
             onChange={(e) => setIndustry(e.target.value)}
@@ -897,7 +904,7 @@ function WorkspaceSetupCard({
         <div>
           <Label>Country</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono uppercase"
+            className="field w-full font-mono uppercase"
             value={country}
             maxLength={2}
             placeholder="NG"
@@ -908,7 +915,7 @@ function WorkspaceSetupCard({
         <div>
           <Label>Workspace slug</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            className="field w-full font-mono"
             value={slug}
             placeholder="sysogen"
             onChange={(e) => setSlug(e.target.value)}
@@ -917,7 +924,7 @@ function WorkspaceSetupCard({
         <div>
           <Label>Requested pool size</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            className="field w-full font-mono"
             value={poolSize}
             inputMode="numeric"
             placeholder="10"
@@ -928,7 +935,7 @@ function WorkspaceSetupCard({
         <div>
           <Label>Default session TTL (min)</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            className="field w-full font-mono"
             value={ttl}
             inputMode="numeric"
             placeholder="120"
@@ -938,7 +945,7 @@ function WorkspaceSetupCard({
         <div>
           <Label>Cooldown (min)</Label>
           <input
-            className="w-full h-9 px-3 border border-ink-200 rounded-md bg-paper text-[13px] font-mono"
+            className="field w-full font-mono"
             value={cooldown}
             inputMode="numeric"
             placeholder="5"
@@ -998,7 +1005,7 @@ function ChangePasswordCard() {
         </button>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Current password</Label>
           <input

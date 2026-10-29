@@ -16,26 +16,26 @@ export function StatCard({
   loading?: boolean;
 }) {
   return (
-    <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-4">
+    <div className="card lift p-5 h-full flex flex-col">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500">{label}</div>
+          <div className="text-[13px] font-medium text-ink-600">{label}</div>
           {loading ? (
-            <div className="mt-2 h-8 w-24 rounded animate-shimmer" />
+            <div className="mt-3 h-9 w-24 rounded-lg animate-shimmer" />
           ) : (
-            <div className="mt-1.5 text-2xl font-semibold text-ink-900 tabular-nums">{value}</div>
+            <div className="mt-2 text-[clamp(1.75rem,1.5rem+0.8vw,2.25rem)] leading-none font-normal tracking-[-0.04em] text-ink-900 tabular-nums">{value}</div>
           )}
-          {hint && !loading && <div className="text-xs text-ink-500 mt-0.5">{hint}</div>}
+          {hint && !loading && <div className="text-[13px] text-ink-500 mt-2">{hint}</div>}
         </div>
         {Icon && (
-          <div className="w-9 h-9 rounded-md bg-bone-100 flex items-center justify-center flex-shrink-0">
-            <Icon className="w-4 h-4 text-ink-600" />
+          <div className="w-10 h-10 rounded-full bg-bone-100 ring-1 ring-ink-900/5 flex items-center justify-center flex-shrink-0">
+            <Icon className="w-[18px] h-[18px] text-brand-teal" />
           </div>
         )}
       </div>
       {trend && !loading && (
         <div
-          className={`mt-3 text-[11px] font-mono uppercase ${
+          className={`mt-auto pt-3 text-[12px] font-medium ${
             trend.direction === "up"
               ? "text-signal-700"
               : trend.direction === "down"

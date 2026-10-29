@@ -46,7 +46,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="p-1 text-ink-400 hover:text-ink-700 transition-colors"
+      className="p-1 rounded-md text-ink-400 hover:text-ink-700 hover:bg-bone-100 transition-colors"
       aria-label="Copy"
     >
       {copied ? (
@@ -148,9 +148,9 @@ export default function SessionDetailPage({
     return (
       <div>
         <BackLink />
-        <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-6">
-          <div className="h-6 w-64 rounded animate-shimmer mb-4" />
-          <div className="h-4 w-96 rounded animate-shimmer" />
+        <div className="card p-6">
+          <div className="h-6 w-64 max-w-full rounded-md animate-shimmer mb-4" />
+          <div className="h-4 w-96 max-w-full rounded-md animate-shimmer" />
         </div>
       </div>
     );
@@ -160,14 +160,14 @@ export default function SessionDetailPage({
     return (
       <div>
         <BackLink />
-        <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-10 text-center">
-          <h2 className="text-lg font-semibold text-ink-900 mb-2">Session not found</h2>
+        <div className="card p-10 text-center">
+          <h2 className="section-title mb-2">Session not found</h2>
           <p className="text-sm text-ink-500 mb-6">
             We couldn&apos;t find a session with this ID. It may have been deleted or expired.
           </p>
           <Link
             href="/dashboard/sessions"
-            className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors inline-flex items-center gap-1"
+            className="btn btn-secondary btn-sm"
           >
             <ChevronLeft className="w-4 h-4" /> Back to Sessions
           </Link>
@@ -194,26 +194,26 @@ export default function SessionDetailPage({
       <BackLink />
 
       {/* Header card */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card p-6 mb-4">
-        <div className="flex flex-wrap items-center gap-4 mb-5">
-          <div className="flex items-center gap-1">
-            <span className="text-[12px] font-mono text-ink-500">ID</span>
-            <span className="text-[13px] font-mono text-ink-900">{s.id}</span>
+      <div className="card p-[clamp(1rem,0.7rem+1.2vw,1.75rem)] mb-4">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="eyebrow">ID</span>
+            <span className="text-[13px] font-mono text-ink-900 break-all">{s.id}</span>
             <CopyButton text={s.id} />
           </div>
           <StatePill state={s.state} />
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-ink-500">
+          <div className="flex items-center gap-1.5">
+            <span className="eyebrow">
               Proxy
             </span>
-            <span className="text-lg font-mono text-ink-900">{s.proxyNumber}</span>
+            <span className="text-[clamp(1.125rem,1rem+0.5vw,1.375rem)] tracking-[-0.02em] text-ink-900 tabular-nums">{s.proxyNumber}</span>
             <CopyButton text={s.proxyNumber} />
           </div>
           {canWrite && stillLive && (
-            <div className="ml-auto flex flex-wrap items-center gap-2">
+            <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setChangeOpen(true)}
-                className="bg-paper border border-ink-200 text-ink-700 px-4 h-10 rounded-md hover:bg-bone-100 font-medium text-sm inline-flex items-center gap-1.5"
+                className="btn btn-secondary"
               >
                 <UserRoundPen className="w-4 h-4" /> Change customer
               </button>
@@ -222,7 +222,7 @@ export default function SessionDetailPage({
                   setEndError(null);
                   setEndOpen(true);
                 }}
-                className="bg-red-50 text-red-700 border border-red-200 px-4 h-10 rounded-md hover:bg-red-100 font-medium text-sm"
+                className="btn bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
               >
                 End session
               </button>
@@ -232,18 +232,18 @@ export default function SessionDetailPage({
 
         {/* Config grid. The two party numbers come first: on a session someone
             started by hand, they are what identifies it. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-2 [&>*]:min-w-0">
           <Block label="Order reference" value={reference ?? "—"} />
           <Block label="Rider / agent" value={s.agentPhoneMasked ?? "—"} />
           <Block label="Customer" value={s.customerPhoneMasked ?? "—"} />
           <Block label="Direction Mode" value={s.directionMode} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4 [&>*]:min-w-0">
           <Block label="Recording" value={s.recordingEnabled ? "Enabled" : "Disabled"} />
           <Block label="Consent Mode" value={s.consentPrompt} />
           <Block label="Grace Period (min)" value={String(s.gracePeriodMinutes)} />
         </div>
-        <p className="text-[12px] text-ink-500 mb-6 pb-6 border-b border-ink-200">
+        <p className="text-[13px] text-ink-500 mb-6 pb-6 border-b border-ink-200">
           Both numbers are masked. Relavoi stores the last four digits for display and nothing
           more of either number is ever shown back.
         </p>
@@ -255,7 +255,7 @@ export default function SessionDetailPage({
         <div className="mt-6">
           <button
             onClick={() => setMetaOpen((v) => !v)}
-            className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-ink-500 hover:text-ink-700 transition-colors"
+            className="flex items-center gap-1.5 eyebrow hover:text-ink-700 transition-colors"
           >
             <ChevronDown
               className={`w-3 h-3 transition-transform ${metaOpen ? "" : "-rotate-90"}`}
@@ -263,7 +263,7 @@ export default function SessionDetailPage({
             Metadata
           </button>
           {metaOpen && (
-            <pre className="mt-3 bg-bone-100 border border-ink-200 rounded-md p-4 text-[12px] font-mono text-ink-700 overflow-x-auto">
+            <pre className="mt-3 bg-bone-50 border border-ink-200 rounded-xl p-4 text-[12px] font-mono text-ink-700 overflow-x-auto">
               {JSON.stringify(s.metadata ?? {}, null, 2)}
             </pre>
           )}
@@ -271,8 +271,9 @@ export default function SessionDetailPage({
       </div>
 
       {/* Tabs */}
-      <div className="bg-paper border border-ink-200 rounded-[10px] shadow-card">
-        <div className="flex border-b border-ink-200 px-2">
+      <div className="card">
+        <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-3">
+          <div className="tabs" role="tablist">
           <TabButton
             label="Calls"
             count={callsQ.data?.pagination.count}
@@ -285,6 +286,7 @@ export default function SessionDetailPage({
             active={tab === "sms"}
             onClick={() => setTab("sms")}
           />
+          </div>
         </div>
 
         {tab === "calls" ? (
@@ -324,7 +326,7 @@ function BackLink() {
   return (
     <Link
       href="/dashboard/sessions"
-      className="inline-flex items-center gap-1 text-sm text-ink-500 hover:text-ink-900 transition-colors mb-4"
+      className="inline-flex items-center gap-1 min-h-[44px] lg:min-h-0 text-[14px] text-ink-500 hover:text-ink-900 transition-colors mb-3"
     >
       <ChevronLeft className="w-4 h-4" /> Sessions
     </Link>
@@ -333,9 +335,9 @@ function BackLink() {
 
 function Block({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className="text-[11px] font-mono uppercase tracking-wider text-ink-500">{label}</div>
-      <div className="text-sm text-ink-900 mt-1 font-mono">{value}</div>
+    <div className="rounded-xl bg-bone-50 ring-1 ring-inset ring-ink-900/5 px-3.5 py-3">
+      <div className="eyebrow">{label}</div>
+      <div className="text-[13px] text-ink-900 mt-1 font-mono break-words">{value}</div>
     </div>
   );
 }
@@ -355,8 +357,8 @@ function Timeline({ session }: { session: Session }) {
           <div key={e.label} className="flex-1 min-w-[120px] relative">
             <div className="flex items-center gap-2">
               <div
-                className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  done ? "bg-signal-500" : "bg-ink-200"
+                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ring-4 ${
+                  done ? "bg-signal-500 ring-signal-500/15" : "bg-ink-300 ring-bone-100"
                 }`}
               />
               {i < events.length - 1 && (
@@ -366,8 +368,8 @@ function Timeline({ session }: { session: Session }) {
               )}
             </div>
             <div
-              className={`mt-2 text-[11px] font-mono uppercase tracking-wider ${
-                done ? "text-ink-700" : "text-ink-400"
+              className={`mt-3 text-[13px] font-medium ${
+                done ? "text-ink-900" : "text-ink-400"
               }`}
             >
               {e.label}
@@ -398,15 +400,14 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`px-4 h-11 text-sm font-medium border-b-2 -mb-px transition-colors ${
-        active
-          ? "border-signal-500 text-ink-900"
-          : "border-transparent text-ink-500 hover:text-ink-700"
-      }`}
+      role="tab"
+      aria-selected={active}
+      data-active={active}
+      className="tab"
     >
       {label}
       {count != null && (
-        <span className="ml-2 text-[11px] font-mono text-ink-500 tabular-nums">
+        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-bone-100 text-[11px] text-ink-600 tabular-nums">
           {count}
         </span>
       )}
@@ -427,13 +428,13 @@ function CallsTab({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full table-stack">
         <thead>
           <tr>
             {["Dir", "Status", "Duration", "Initiated", "Answered", "Ended"].map((h) => (
               <th
                 key={h}
-                className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2"
+                className="th"
               >
                 {h}
               </th>
@@ -449,7 +450,7 @@ function CallsTab({
                 <div className="text-red-700 mb-2">Failed to load calls</div>
                 <button
                   onClick={onRetry}
-                  className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
+                  className="btn btn-secondary btn-sm"
                 >
                   Retry
                 </button>
@@ -466,30 +467,30 @@ function CallsTab({
             </tr>
           ) : (
             rows.map((c) => (
-              <tr key={c.id} className="hover:bg-bone-100 transition-colors">
-                <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+              <tr key={c.id} className="hover:bg-bone-50 transition-colors">
+                <td data-label="Dir" className="td text-[13px] text-ink-700">
                   <DirectionGlyph direction={c.direction} />
                 </td>
-                <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
+                <td data-label="Status" className="td text-[13px]">
                   <StatePill state={c.status} size="sm" />
                 </td>
-                <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono tabular-nums">
+                <td data-label="Duration" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                   {fmtDuration(c.durationSeconds)}
                 </td>
-                <td
-                  className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                <td data-label="Initiated"
+                  className="td text-[13px] text-ink-700"
                   title={fmtAbsolute(c.initiatedAt)}
                 >
                   {fmtRelative(c.initiatedAt)}
                 </td>
-                <td
-                  className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                <td data-label="Answered"
+                  className="td text-[13px] text-ink-700"
                   title={fmtAbsolute(c.answeredAt)}
                 >
                   {fmtRelative(c.answeredAt)}
                 </td>
-                <td
-                  className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                <td data-label="Ended"
+                  className="td text-[13px] text-ink-700"
                   title={fmtAbsolute(c.endedAt)}
                 >
                   {fmtRelative(c.endedAt)}
@@ -516,18 +517,18 @@ function SmsTab({
 }) {
   return (
     <div>
-      <div className="px-4 py-3 bg-blue-50 border-b border-ink-200 flex items-center gap-2 text-[12px] text-blue-700">
+      <div className="mx-3 sm:mx-4 mb-3 px-3.5 py-2.5 rounded-xl bg-blue-50 ring-1 ring-inset ring-blue-200/60 flex items-center gap-2 text-[13px] text-blue-800">
         <Lock className="w-3.5 h-3.5 flex-shrink-0" />
         Message content is encrypted at rest. Only the sender&apos;s app can decrypt it.
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full table-stack">
           <thead>
             <tr>
               {["Dir", "Status", "Cost", "Sent", "Delivered"].map((h) => (
                 <th
                   key={h}
-                  className="bg-bone-100 text-[11px] font-mono uppercase tracking-wider text-ink-500 text-left px-4 py-2"
+                  className="th"
                 >
                   {h}
                 </th>
@@ -543,7 +544,7 @@ function SmsTab({
                   <div className="text-red-700 mb-2">Failed to load SMS</div>
                   <button
                     onClick={onRetry}
-                    className="bg-paper border border-ink-200 text-ink-700 px-3 h-9 rounded-md hover:bg-bone-100 text-sm transition-colors"
+                    className="btn btn-secondary btn-sm"
                   >
                     Retry
                   </button>
@@ -560,24 +561,24 @@ function SmsTab({
               </tr>
             ) : (
               rows.map((m) => (
-                <tr key={m.id} className="hover:bg-bone-100 transition-colors">
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700">
+                <tr key={m.id} className="hover:bg-bone-50 transition-colors">
+                  <td data-label="Dir" className="td text-[13px] text-ink-700">
                     <DirectionGlyph direction={m.direction} />
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px]">
+                  <td data-label="Status" className="td text-[13px]">
                     <StatePill state={m.status} size="sm" />
                   </td>
-                  <td className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700 font-mono">
+                  <td data-label="Cost" className="td text-[13px] text-ink-700 font-mono">
                     {m.cost ?? "—"}
                   </td>
-                  <td
-                    className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                  <td data-label="Sent"
+                    className="td text-[13px] text-ink-700"
                     title={fmtAbsolute(m.sentAt)}
                   >
                     {fmtRelative(m.sentAt)}
                   </td>
-                  <td
-                    className="px-4 py-3 border-t border-ink-200 text-[13px] text-ink-700"
+                  <td data-label="Delivered"
+                    className="td text-[13px] text-ink-700"
                     title={fmtAbsolute(m.deliveredAt)}
                   >
                     {fmtRelative(m.deliveredAt)}

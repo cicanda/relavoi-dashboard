@@ -10,7 +10,7 @@ Web dashboard for Relavoi tenants to manage sessions, view analytics, configure 
 - Zustand + persist for client auth (localStorage key `relavoi.auth.v1`)
 - TanStack React Query for data
 - Recharts for charts; lucide-react for icons
-- IBM Plex Sans + Plex Mono via `next/font/google`
+- Albert Sans + Fragment Mono via `next/font/google`
 
 ## Setup
 
@@ -66,8 +66,15 @@ src/
 ## Design system
 
 Tokens live in `src/app/globals.css` (Tailwind v4 `@theme inline`):
-ink-{200..900}, bone-100, paper, signal-{500..700} (brand green).
-Typography is IBM Plex Sans (UI) + IBM Plex Mono (IDs, phone numbers, codes).
+ink-{200..900}, bone-{50,100,200}, paper, signal-{500..700} (brand green),
+brand-{teal,navy,amber} (from the logo), plus fluid type (`--text-*`), radii,
+shadows and spacing. The same file defines the shared component classes:
+`card`, `tray`, `btn btn-primary|secondary`, `field`, `chip`, `th`/`td`,
+`segmented`, `tabs`, `code-block`, `page-title`, `section-title`, `eyebrow`.
+Tables opt into phone layouts with `table-stack` (or `table-grid-md` for very
+wide ones) plus a `data-label` on each cell.
+Typography is Albert Sans (UI) + Fragment Mono (IDs, phone numbers, codes).
+All animation is switched off under `prefers-reduced-motion`.
 
 See the public design language reference at https://docs.relavoi.com/design.
 

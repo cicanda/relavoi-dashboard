@@ -7,7 +7,7 @@ import { useSidebar } from "@/lib/sidebar-store";
 
 export function Topbar() {
   const { user } = useAuth();
-  const { collapsed, openSidebar, toggleCollapsed } = useSidebar();
+  const { open, collapsed, openSidebar, toggleCollapsed } = useSidebar();
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ⌘K / Ctrl+K to focus the global search input.
@@ -23,7 +23,7 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="h-[52px] bg-paper border-b border-ink-200 px-3 sm:px-4 flex items-center gap-2 sm:gap-4 flex-shrink-0">
+    <header className="sticky top-0 z-30 h-16 bg-bone-100/85 backdrop-blur-md border-b border-ink-200 px-[var(--space-gutter)] flex items-center gap-2 sm:gap-4 flex-shrink-0">
       {/* Two buttons rather than one that branches on viewport width: the
           breakpoint is a CSS concern, and reading window.innerWidth during
           render is not SSR-safe. Same slot, so it reads as one control. */}
@@ -31,7 +31,9 @@ export function Topbar() {
         type="button"
         onClick={openSidebar}
         aria-label="Open navigation"
-        className="lg:hidden -ml-1 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-600 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+        aria-expanded={open}
+        aria-controls="dashboard-nav"
+        className="lg:hidden -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-700 hover:text-ink-900 hover:bg-ink-900/5 rounded-full transition-colors"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -40,20 +42,23 @@ export function Topbar() {
         onClick={toggleCollapsed}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="hidden lg:flex -ml-1 p-2 items-center justify-center text-ink-600 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+        aria-expanded={!collapsed}
+        aria-controls="dashboard-nav"
+        className="hidden lg:flex -ml-2 w-9 h-9 items-center justify-center text-ink-500 hover:text-ink-900 hover:bg-ink-900/5 rounded-full transition-colors"
       >
         {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
       </button>
 
       <div className="relative flex-1 min-w-0 max-w-md">
-        <Search className="w-3.5 h-3.5 text-ink-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-ink-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           ref={searchRef}
           type="search"
           placeholder="Search session ID, proxy number, order ID…"
-          className="w-full h-9 pl-8 pr-12 bg-bone-100 border border-ink-200 rounded-md font-mono text-[12px] text-ink-700 placeholder:text-ink-400 focus:outline-none focus:border-signal-500 focus:bg-paper transition-colors"
+          aria-label="Search"
+          className="field h-10 pl-10 pr-14 bg-paper/70 text-[14px] text-ink-700 placeholder:text-ink-400 focus:bg-paper"
         />
-        <kbd className="hidden md:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 bg-paper border border-ink-200 rounded text-[10px] font-mono text-ink-500 select-none">
+        <kbd className="hidden md:inline-flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 bg-bone-100 border border-ink-200 rounded-md text-[11px] font-mono text-ink-500 select-none pointer-events-none">
           ⌘K
         </kbd>
       </div>
@@ -62,14 +67,14 @@ export function Topbar() {
         <ModeBadge />
 
         <button
-          className="hidden sm:inline-flex p-2 text-ink-500 hover:text-ink-900 hover:bg-bone-100 rounded-md transition-colors"
+          className="hidden sm:inline-flex w-10 h-10 items-center justify-center text-ink-500 hover:text-ink-900 hover:bg-ink-900/5 rounded-full transition-colors"
           aria-label="Notifications"
         >
           <Bell className="w-4 h-4" />
         </button>
 
-        <div className="h-6 w-px bg-ink-200" />
-        <div className="text-xs text-ink-500 hidden sm:block">{user?.email ?? ""}</div>
+        <div className="hidden sm:block h-6 w-px bg-ink-200" />
+        <div className="text-[13px] text-ink-600 hidden sm:block truncate max-w-[16rem]">{user?.email ?? ""}</div>
       </div>
     </header>
   );
@@ -90,8 +95,8 @@ function ModeBadge() {
           ? "Live mode. API calls route through the carrier and are billed."
           : "Sandbox mode. API calls are free and no real calls are placed."
       }
-      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md font-mono text-[11px] uppercase tracking-wider ${
-        live ? "bg-signal-500/15 text-signal-700" : "bg-amber-500/15 text-amber-700"
+      className={`chip ${
+        live ? "bg-signal-500/15 text-signal-700" : "bg-brand-amber/15 text-amber-700"
       }`}
     >
       <span
