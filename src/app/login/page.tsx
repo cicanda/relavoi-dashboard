@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLogo } from "@/components/brand-mark";
 import { useAuth } from "@/lib/auth-store";
 import { dashboardLogin } from "@/lib/api";
 
@@ -65,9 +65,8 @@ export default function LoginPage() {
     <div className="min-h-screen w-full bg-ink-900 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-paper border border-ink-200 rounded-[10px] shadow-card p-8">
         <div className="flex flex-col items-center text-center">
-          <BrandMark size={44} />
-          <h1 className="mt-4 text-2xl font-semibold text-ink-900 tracking-tight">Relavoi</h1>
-          <p className="mt-1 text-sm text-ink-500">Sign in to your workspace</p>
+          <BrandLogo height={44} />
+          <h1 className="mt-4 text-sm text-ink-500">Sign in to your workspace</h1>
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>

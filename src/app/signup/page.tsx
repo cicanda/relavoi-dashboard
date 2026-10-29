@@ -4,7 +4,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLogo } from "@/components/brand-mark";
 import { useAuth } from "@/lib/auth-store";
 import { signup } from "@/lib/api";
 import { useToast } from "@/components/toast";
@@ -119,9 +119,8 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen bg-bone-50 flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-[460px]">
-        <div className="flex items-center gap-2.5 mb-8">
-          <BrandMark />
-          <span className="font-semibold text-[17px] tracking-tight text-ink-900">Relavoi</span>
+        <div className="mb-8">
+          <BrandLogo height={36} />
         </div>
 
         <div className="bg-paper border border-ink-200 rounded-xl p-7">

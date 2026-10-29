@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-store";
 import { listSessions } from "@/lib/api";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLogo, BrandMark } from "@/components/brand-mark";
 import { useSidebar } from "@/lib/sidebar-store";
 import { useEffect, useState } from "react";
 import {
@@ -149,10 +149,13 @@ export function Sidebar() {
           collapsed ? "lg:justify-center lg:px-0 px-4" : "px-4"
         }`}
       >
-        <BrandMark size={36} />
+        {/* Collapsed rail is 4rem wide — only the tile fits there. */}
+        <div className={collapsed ? "hidden lg:block" : "hidden"}>
+          <BrandMark size={36} />
+        </div>
         <div className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
-          <div className="text-sm font-semibold text-ink-900 leading-tight">Relavoi</div>
-          <div className="text-[11px] text-ink-500 truncate" title={tenant?.name ?? ""}>
+          <BrandLogo height={28} />
+          <div className="mt-1 text-[11px] text-ink-500 truncate" title={tenant?.name ?? ""}>
             {tenant?.name ?? "—"}
           </div>
         </div>
