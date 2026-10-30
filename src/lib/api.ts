@@ -14,6 +14,13 @@ import type {
   PricingTierRow,
   PaginatedResponse,
   WebhookDeliveryLog,
+  WalletOverview,
+  LedgerEntryDto,
+  TopUpQuote,
+  TopUpOpened,
+  TopUpVerified,
+  InvoiceListItem,
+  Money,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1";
@@ -488,4 +495,71 @@ export async function dismissKybPrompt() {
     "/kyb/prompt/dismiss",
   );
   return data;
+}
+
+// ─── Billing wallet ───────────────────────────────────────────────────────────
+
+export async function getWalletOverview() {
+  const { data } = await api.get<WalletOverview>("/billing/wallet");
+  return data;
+}
+
+export async function getWalletLedger(limit = 25, before?: string) {
+  const { data } = await api.get<{ entries: LedgerEntryDto[]; nextBefore: string | null }>(
+    "/billing/wallet/ledger",
+    { params: { limit, ...(before ? { before } : {}) } },
+  );
+  return data;
+}
+
+/** What a custom amount will cost, priced by the server. */
+export async function getTopUpQuote(amountNaira: number) {
+  const { data } = await api.get<TopUpQuote>("/billing/wallet/topups/quote", {
+    params: { amountNaira },
+  });
+  return data;
+}
+
+export async function startTopUp(amountNaira: number) {
+  const { data } = await api.post<TopUpOpened>("/billing/wallet/topups", { amountNaira });
+  return data;
+}
+
+export async function verifyTopUp(reference: string) {
+  const { data } = await api.post<TopUpVerified>(
+    `/billing/wallet/topups/${encodeURIComponent(reference)}/verify`,
+  );
+  return data;
+}
+
+export async function setLowBalanceThreshold(lowBalanceThresholdNaira: number) {
+  const { data } = await api.put<{ lowBalanceThreshold: Money }>("/billing/wallet/settings", {
+    lowBalanceThresholdNaira,
+  });
+  return data;
+}
+
+export async function getInvoices(limit = 24) {
+  const { data } = await api.get<{ invoices: InvoiceListItem[] }>("/billing/invoices", {
+    params: { limit },
+  });
+  return data.invoices;
+}
+
+/**
+ * Open an invoice in a new tab, ready to print.
+ *
+ * Fetched rather than linked, because the printable document needs the same
+ * bearer token as everything else and a plain anchor carries no headers. The
+ * blob is revoked on a timer rather than immediately: revoking it before the
+ * new tab has finished reading it leaves a blank page.
+ */
+export async function openInvoiceForPrint(invoiceId: string): Promise<void> {
+  const { data } = await api.get<string>(`/billing/invoices/${invoiceId}/print`, {
+    responseType: "text",
+    headers: { Accept: "text/html" },
+  });
+  const url = URL.createObjectURL(new Blob([data], { type: "text/html" }));
+  window.open(url, "_blank", "noopener");
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

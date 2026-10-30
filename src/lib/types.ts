@@ -149,3 +149,115 @@ export interface WebhookDeliveryLog {
   requestedAt: string;
   completedAt?: string | null;
 }
+
+// ─── Billing wallet ───────────────────────────────────────────────────────────
+
+/**
+ * Money, as the server sends it.
+ *
+ * Three representations of one figure: the exact amount in kobo as a string,
+ * the string to print, and the plain decimal. The dashboard prints `display`
+ * and never computes with any of them. Every total, fee and percentage on the
+ * billing page is worked out server-side in integer kobo, because a rounding
+ * difference between what the page shows and what the ledger holds is worse
+ * than a page that shows nothing.
+ */
+export interface Money {
+  kobo: string;
+  display: string;
+  naira: string;
+}
+
+export type BillingBanner = "ok" | "low" | "grace" | "blocked" | "bypass";
+
+export interface TopUpPreset {
+  amountNaira: number;
+  requested: Money;
+  fee: Money;
+  total: Money;
+}
+
+export interface WalletOverview {
+  mode: "sandbox" | "live";
+  plan: {
+    tier: Tier;
+    monthly: Money;
+    includedMinutes: number;
+    overagePerMinute: Money;
+  } | null;
+  includedMinutes: { total: number; used: number; left: number; percentUsed: number };
+  wallet: {
+    balance: Money;
+    creditLimit: Money;
+    lowBalanceThreshold: Money;
+    negative: boolean;
+  };
+  status: {
+    state: BillingBanner;
+    blocked: boolean;
+    graceUntil: string | null;
+    graceDaysLeft: number | null;
+    bypassUntil: string | null;
+  };
+  topUp: {
+    minimumNaira: number;
+    available: boolean;
+    presets: TopUpPreset[];
+    internationalCardNote: string;
+  };
+  period: { id: string; start: string; end: string } | null;
+}
+
+export type LedgerType =
+  | "TOPUP"
+  | "FEE"
+  | "SUBSCRIPTION"
+  | "USAGE"
+  | "ADJUSTMENT"
+  | "REFUND"
+  | "REVERSAL";
+
+export interface LedgerEntryDto {
+  id: string;
+  type: LedgerType;
+  label: string;
+  amount: Money;
+  balanceAfter: Money;
+  reference: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface TopUpQuote {
+  allowed: boolean;
+  minimumNaira: number;
+  requested: Money;
+  fee: Money | null;
+  total: Money | null;
+}
+
+export interface TopUpOpened {
+  reference: string;
+  checkoutUrl: string;
+  requested: Money;
+  fee: Money;
+  total: Money;
+}
+
+export interface TopUpVerified {
+  status: "credited" | "already-credited" | "not-paid" | "unknown-reference";
+  paid: Money;
+  fee: Money;
+  credited: Money;
+  balance: Money;
+}
+
+export interface InvoiceListItem {
+  id: string;
+  number: string;
+  status: string;
+  total: Money;
+  periodStart: string;
+  periodEnd: string;
+  issuedAt: string;
+}
