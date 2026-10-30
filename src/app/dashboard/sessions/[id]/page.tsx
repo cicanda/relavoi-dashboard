@@ -233,9 +233,9 @@ export default function SessionDetailPage({
         {/* Config grid. The two party numbers come first: on a session someone
             started by hand, they are what identifies it. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-2 [&>*]:min-w-0">
-          <Block label="Order reference" value={reference ?? "—"} />
-          <Block label="Rider / agent" value={s.agentPhoneMasked ?? "—"} />
-          <Block label="Customer" value={s.customerPhoneMasked ?? "—"} />
+          <Block label="Order reference" value={reference ?? "Not set"} />
+          <Block label="Rider / agent" value={s.agentPhoneMasked ?? "Not set"} />
+          <Block label="Customer" value={s.customerPhoneMasked ?? "Not set"} />
           <Block label="Direction Mode" value={s.directionMode} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4 [&>*]:min-w-0">
@@ -379,7 +379,7 @@ function Timeline({ session }: { session: Session }) {
             <div
               className={`text-[12px] mt-0.5 ${done ? "text-ink-700" : "text-ink-400"}`}
             >
-              {done ? fmtAbsolute(e.ts) : "—"}
+              {done ? fmtAbsolute(e.ts) : "Not set"}
             </div>
           </div>
         );
@@ -571,7 +571,7 @@ function SmsTab({
                     <StatePill state={m.status} size="sm" />
                   </td>
                   <td data-label="Cost" className="td text-[13px] text-ink-700 font-mono">
-                    {m.cost ?? "—"}
+                    {m.cost ?? "Not set"}
                   </td>
                   <td data-label="Sent"
                     className="td text-[13px] text-ink-700"

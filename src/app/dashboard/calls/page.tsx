@@ -258,7 +258,7 @@ export default function CallsHistoryPage() {
             isLoadingFirstPage
               ? ""
               : stats.answerRate == null
-                ? "—"
+                ? "None"
                 : `${stats.answerRate.toFixed(1)}%`
           }
           icon={CheckCircle2}
@@ -270,7 +270,7 @@ export default function CallsHistoryPage() {
             isLoadingFirstPage
               ? ""
               : stats.avgDuration == null
-                ? "—"
+                ? "None"
                 : fmtDuration(stats.avgDuration)
           }
           icon={Clock}
@@ -336,7 +336,7 @@ export default function CallsHistoryPage() {
                 rows.map((c) => (
                   <tr key={c.id} className="group hover:bg-bone-50 transition-colors">
                     <td data-label="Proxy" className="td text-[13px] text-ink-700 font-mono">
-                      {c.proxyNumber ?? "—"}
+                      {c.proxyNumber ?? "Not set"}
                     </td>
                     <td data-label="Dir" className="td text-[13px] text-ink-700">
                       <DirectionGlyph direction={c.direction} />
@@ -368,7 +368,7 @@ export default function CallsHistoryPage() {
                           view <ArrowRight className="w-3 h-3" />
                         </Link>
                       ) : (
-                        <span className="text-ink-400">—</span>
+                        <span className="text-ink-400">None</span>
                       )}
                     </td>
                   </tr>

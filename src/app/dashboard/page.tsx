@@ -128,7 +128,7 @@ export default function OverviewPage() {
     callsQ.data?.data != null
       ? fmtNumber(callsQ.data.data.length)
       : callsQ.error
-        ? "—"
+        ? "Not set"
         : undefined;
   const config = configQ.data;
 
@@ -167,20 +167,20 @@ export default function OverviewPage() {
         />
         <StatCard
           label="Total Calls"
-          value={callsQ.isLoading ? "" : (callsTotal ?? "—")}
+          value={callsQ.isLoading ? "" : (callsTotal ?? "Not set")}
           icon={PhoneCall}
           hint="last 30 days"
           loading={callsQ.isLoading}
         />
         <StatCard
           label="Call Minutes"
-          value="—"
+          value="Not set"
           icon={Clock}
           hint="(coming soon)"
         />
         <StatCard
           label="SMS Sent"
-          value="—"
+          value="Not set"
           icon={MessageSquare}
           hint="(coming soon)"
         />
@@ -279,7 +279,7 @@ export default function OverviewPage() {
           <div className="card p-5">
             <h2 className="section-title mb-4">Quick Config</h2>
             <dl className="divide-y divide-ink-200">
-              <ConfigRow label="Tier" value={config?.tier ?? tenant?.tier ?? "—"} />
+              <ConfigRow label="Tier" value={config?.tier ?? tenant?.tier ?? "Not set"} />
               {/* Not "Disabled", which reads like a choice this workspace made.
                   Recording is not available to anyone yet. */}
               <ConfigRow label="Recording" value="Coming soon" />
@@ -294,12 +294,12 @@ export default function OverviewPage() {
               <ConfigRow
                 label="Grace Period"
                 value={
-                  config?.defaultGracePeriod != null ? `${config.defaultGracePeriod} min` : "—"
+                  config?.defaultGracePeriod != null ? `${config.defaultGracePeriod} min` : "Not set"
                 }
               />
               <ConfigRow
                 label="Expired Behavior"
-                value={config?.expiredCallBehavior ?? "—"}
+                value={config?.expiredCallBehavior ?? "Not set"}
                 mono
               />
             </dl>
@@ -316,7 +316,7 @@ export default function OverviewPage() {
             <h2 className="section-title mb-2">Billing</h2>
             <p className="text-[13px] text-ink-500">
               Current period: this month · Plan:{" "}
-              <span className="font-mono uppercase text-ink-700">{tenant?.tier ?? "—"}</span>
+              <span className="font-mono uppercase text-ink-700">{tenant?.tier ?? "Not set"}</span>
             </p>
             <Link
               href="/dashboard/billing"

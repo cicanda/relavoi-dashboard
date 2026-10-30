@@ -19,7 +19,7 @@ const fragmentMono = Fragment_Mono({
 
 export const metadata: Metadata = {
   title: "Relavoi",
-  description: "Privacy Communication Platform — Tenant Dashboard",
+  description: "Privacy Communication Platform: Tenant Dashboard",
 };
 
 export default function RootLayout({

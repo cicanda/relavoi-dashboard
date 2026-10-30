@@ -160,7 +160,7 @@ export function Sidebar() {
         <div className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
           <BrandLogo height={30} />
           <div className="mt-1.5 text-[12px] text-ink-500 truncate" title={tenant?.name ?? ""}>
-            {tenant?.name ?? "—"}
+            {tenant?.name ?? "Not set"}
           </div>
         </div>
       </div>
@@ -226,7 +226,7 @@ export function Sidebar() {
           {initials(user?.name ?? user?.email ?? "?")}
         </div>
         <div className={`flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
-          <div className="text-sm text-ink-900 truncate font-medium">{user?.name ?? user?.email ?? "—"}</div>
+          <div className="text-sm text-ink-900 truncate font-medium">{user?.name ?? user?.email ?? "Not set"}</div>
           <div className="text-[11px] font-mono uppercase text-ink-500">{user?.role ?? ""}</div>
         </div>
         <button

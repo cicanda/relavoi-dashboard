@@ -286,13 +286,13 @@ export default function SessionsListPage() {
                         </div>
                       </td>
                       <td data-label="Reference" className="td text-[13px] text-ink-700 max-w-[180px] truncate">
-                        {referenceOf(s) ?? <span className="text-ink-400">—</span>}
+                        {referenceOf(s) ?? <span className="text-ink-400">Not set</span>}
                       </td>
                       <td data-label="Proxy" className="td text-[13px] text-ink-700 font-mono whitespace-nowrap">
                         {s.proxyNumber}
                       </td>
                       <td data-label="Customer" className="td text-[13px] text-ink-700 font-mono whitespace-nowrap">
-                        {s.customerPhoneMasked ?? <span className="text-ink-400">—</span>}
+                        {s.customerPhoneMasked ?? <span className="text-ink-400">Not set</span>}
                       </td>
                       <td data-label="Status" className="td text-[13px]">
                         <StatePill state={s.state as SessionState} size="sm" />
@@ -375,7 +375,7 @@ function SessionCard({ session, onOpen }: { session: Session; onOpen: () => void
         <span className="eyebrow">
           Customer
         </span>
-        <span className="font-mono text-ink-700">{session.customerPhoneMasked ?? "—"}</span>
+        <span className="font-mono text-ink-700">{session.customerPhoneMasked ?? "Not set"}</span>
       </div>
       <div className="mt-2 text-[12px] text-ink-500">
         {session.callCount ?? 0} {(session.callCount ?? 0) === 1 ? "call" : "calls"} ·{" "}

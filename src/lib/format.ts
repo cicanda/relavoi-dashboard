@@ -1,12 +1,12 @@
 import { formatDistanceToNow, format } from "date-fns";
 
 export function truncId(id?: string | null, n = 8): string {
-  if (!id) return "—";
+  if (!id) return "None";
   return id.length <= n + 2 ? id : `${id.slice(0, n)}…`;
 }
 
 export function fmtRelative(iso?: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "Not set";
   try {
     return formatDistanceToNow(new Date(iso), { addSuffix: true });
   } catch {
@@ -15,7 +15,7 @@ export function fmtRelative(iso?: string | null): string {
 }
 
 export function fmtAbsolute(iso?: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "Not set";
   try {
     return format(new Date(iso), "MMM d, yyyy HH:mm");
   } catch {
@@ -24,7 +24,7 @@ export function fmtAbsolute(iso?: string | null): string {
 }
 
 export function fmtDuration(seconds?: number | null): string {
-  if (seconds == null) return "—";
+  if (seconds == null) return "None";
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -32,12 +32,12 @@ export function fmtDuration(seconds?: number | null): string {
 }
 
 export function fmtNumber(n?: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "None";
   return new Intl.NumberFormat("en-US").format(n);
 }
 
 export function fmtCurrency(value?: number | null, currency = "NGN"): string {
-  if (value == null) return "—";
+  if (value == null) return "None";
   try {
     return new Intl.NumberFormat("en-NG", { style: "currency", currency }).format(value);
   } catch {
@@ -46,7 +46,7 @@ export function fmtCurrency(value?: number | null, currency = "NGN"): string {
 }
 
 export function fmtPhone(phone?: string | null): string {
-  return phone ?? "—";
+  return phone ?? "Not set";
 }
 
 export function slugify(s: string): string {

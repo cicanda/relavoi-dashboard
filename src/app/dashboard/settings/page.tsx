@@ -330,15 +330,15 @@ function TeamCard() {
           <tbody>
             <tr className="hover:bg-bone-50 transition-colors">
               <td data-label="Name" className="td text-[13px] text-ink-700">
-                {user?.name ?? "—"}
+                {user?.name ?? "Not set"}
               </td>
               <td data-label="Email" className="td text-[13px] text-ink-700">
-                {user?.email ?? "—"}
+                {user?.email ?? "Not set"}
               </td>
               <td data-label="Role" className="td text-[13px] text-ink-700">
                 <RolePill role={user?.role ?? "VIEWER"} />
               </td>
-              <td data-label="Invited at" className="td text-[13px] text-ink-700">—</td>
+              <td data-label="Invited at" className="td text-[13px] text-ink-700">None</td>
               <td data-label="Actions" className="td text-[13px] text-ink-500">
                 You
               </td>
@@ -439,9 +439,9 @@ function InviteModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setRole(e.target.value as "OWNER" | "ADMIN" | "VIEWER")}
                 className={selectClass}
               >
-                <option value="VIEWER">Viewer — read-only access</option>
-                <option value="ADMIN">Admin — manage settings and team</option>
-                <option value="OWNER">Owner — full account control</option>
+                <option value="VIEWER">Viewer (read-only access)</option>
+                <option value="ADMIN">Admin (manage settings and team)</option>
+                <option value="OWNER">Owner (full account control)</option>
               </select>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -461,7 +461,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="space-y-4">
             <div className="bg-signal-500/10 border border-signal-500/30 rounded-xl px-3.5 py-2.5 text-[13px] text-signal-700">
-              Invite created. Share the temporary password securely — it will not be shown
+              Invite created. Share the temporary password securely. It will not be shown
               again.
             </div>
             <div>
@@ -545,9 +545,9 @@ function SessionDefaultsCard({
             }
             className={selectClass}
           >
-            <option value="DEAD_LINE">DEAD_LINE — hang up with message</option>
-            <option value="REDIRECT_SUPPORT">REDIRECT_SUPPORT — forward to support</option>
-            <option value="PLAY_MESSAGE">PLAY_MESSAGE — play custom audio</option>
+            <option value="DEAD_LINE">DEAD_LINE (hang up with message)</option>
+            <option value="REDIRECT_SUPPORT">REDIRECT_SUPPORT (forward to support)</option>
+            <option value="PLAY_MESSAGE">PLAY_MESSAGE (play custom audio)</option>
           </select>
         </div>
         <div>
@@ -570,7 +570,7 @@ function SessionDefaultsCard({
             onChange={(e) => setMaxDuration(Number(e.target.value))}
             className={inputClass}
           />
-          <Hint>Hard timeout. Not yet persisted via /config — coming soon.</Hint>
+          <Hint>Hard timeout. Not yet persisted via /config (coming soon).</Hint>
         </div>
       </div>
     </Card>

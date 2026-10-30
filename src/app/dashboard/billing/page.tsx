@@ -40,7 +40,7 @@ import type { InvoiceListItem, LedgerEntryDto, Money, WalletOverview } from "@/l
 const CUSTOM = "custom";
 
 function moneyText(m: Money | null | undefined): string {
-  return m?.display ?? "—";
+  return m?.display ?? "None";
 }
 
 /** Which banner, and what it says. The state is the server's decision. */
@@ -195,7 +195,7 @@ function Summary({ data }: { data: WalletOverview }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 [&>*]:min-w-0">
         <div className="card p-5">
           <div className="eyebrow mb-1.5">Plan</div>
-          <div className="section-title mb-2">{data.plan?.tier ?? "—"}</div>
+          <div className="section-title mb-2">{data.plan?.tier ?? "Not set"}</div>
           <div className="text-[13px] text-ink-700 tabular-nums">
             {moneyText(data.plan?.monthly)} per month
           </div>
@@ -370,7 +370,7 @@ function TopUp({ data, canSpend }: { data: WalletOverview; canSpend: boolean }) 
             {/* Every figure here comes from the server, priced before anyone commits. */}
             <div className="rounded-card bg-bone-50 ring-1 ring-inset ring-ink-900/5 p-4 mb-4">
               <Row label="Credited to your wallet" value={moneyText(quoted?.requested)} />
-              <Row label="Processing fee" value={quoted ? `+ ${quoted.fee.display}` : "—"} muted />
+              <Row label="Processing fee" value={quoted ? `+ ${quoted.fee.display}` : "Not set"} muted />
               <div className="border-t border-ink-200 mt-2 pt-2">
                 <Row label="You will be charged" value={moneyText(quoted?.total)} strong />
               </div>
@@ -502,7 +502,7 @@ function Ledger({
                     {e.balanceAfter.display}
                   </td>
                   <td data-label="Reference" className="td text-[12px] font-mono text-ink-500">
-                    {e.reference ?? "—"}
+                    {e.reference ?? "None"}
                   </td>
                 </tr>
               ))

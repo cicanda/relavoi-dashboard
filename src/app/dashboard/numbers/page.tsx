@@ -77,7 +77,9 @@ export default function NumbersPage() {
 
   const loading = poolQ.isLoading;
   const updatedLabel =
-    poolQ.dataUpdatedAt > 0 ? fmtRelative(new Date(poolQ.dataUpdatedAt).toISOString()) : "—";
+    poolQ.dataUpdatedAt > 0
+      ? `Updated ${fmtRelative(new Date(poolQ.dataUpdatedAt).toISOString())}`
+      : "Not updated yet";
 
   return (
     <div>
@@ -97,7 +99,7 @@ export default function NumbersPage() {
       />
 
       <div className="-mt-2 mb-4 eyebrow">
-        Updated {updatedLabel}
+        {updatedLabel}
       </div>
 
       {/* Pool Overview */}

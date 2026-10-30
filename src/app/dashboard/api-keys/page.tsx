@@ -228,8 +228,7 @@ export default function ApiKeysPage() {
 
   // Last used placeholder (backend hasn't shipped this yet).
   const lastUsedAt: string | null = null;
-  const lastUsedLabel =
-    fmtRelative(lastUsedAt) === "—" ? "never" : fmtRelative(lastUsedAt);
+  const lastUsedLabel = lastUsedAt ? fmtRelative(lastUsedAt) : "never";
 
   const activeSnippet =
     sdkTab === "js" ? jsSnippet : sdkTab === "kotlin" ? kotlinSnippet : swiftSnippet;

@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
       answered += asNumber(b.answered) + asNumber(b.completed);
       total += asNumber(b.total);
     }
-    if (total === 0) return "—";
+    if (total === 0) return "None";
     return `${Math.round((answered / total) * 100)}%`;
   }, [callBuckets]);
 

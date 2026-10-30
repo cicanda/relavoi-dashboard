@@ -440,7 +440,7 @@ export default function WebhooksPage() {
                     colSpan={5}
                     className="px-4 py-12 border-t border-ink-200 text-center text-sm text-ink-500"
                   >
-                    No deliveries yet — send a test event to verify.
+                    No deliveries yet. Send a test event to verify.
                   </td>
                 </tr>
               ) : (
@@ -456,7 +456,7 @@ export default function WebhooksPage() {
                       />
                     </td>
                     <td data-label="HTTP" className="td text-[13px] text-ink-700 font-mono tabular-nums">
-                      {log.statusCode ?? "—"}
+                      {log.statusCode ?? "None"}
                     </td>
                     <td data-label="Attempt #" className="td text-[13px] text-ink-700 font-mono tabular-nums">
                       {log.attemptCount ?? 1}
