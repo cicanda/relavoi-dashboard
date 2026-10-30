@@ -280,10 +280,9 @@ export default function OverviewPage() {
             <h2 className="section-title mb-4">Quick Config</h2>
             <dl className="divide-y divide-ink-200">
               <ConfigRow label="Tier" value={config?.tier ?? tenant?.tier ?? "—"} />
-              <ConfigRow
-                label="Recording"
-                value={config?.recordingEnabled ? "Enabled" : "Disabled"}
-              />
+              {/* Not "Disabled", which reads like a choice this workspace made.
+                  Recording is not available to anyone yet. */}
+              <ConfigRow label="Recording" value="Coming soon" />
               <ConfigRow
                 label="Push"
                 value={

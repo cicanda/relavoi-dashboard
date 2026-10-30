@@ -123,11 +123,7 @@ export default function SettingsPage() {
           saving={patchMut.isPending}
         />
 
-        <RecordingCard
-          tenant={tenant}
-          onSave={(patch) => patchMut.mutate(patch)}
-          saving={patchMut.isPending}
-        />
+        <RecordingCard />
 
         <PushCard
           tenant={tenant}
@@ -583,75 +579,32 @@ function SessionDefaultsCard({
 
 // ─── Recording ──────────────────────────────────────────────────────────────
 
-function RecordingCard({
-  tenant,
-  onSave,
-  saving,
-}: {
-  tenant: Tenant;
-  onSave: (patch: Partial<Tenant>) => void;
-  saving: boolean;
-}) {
-  const [enabled, setEnabled] = useState<boolean>(tenant.recordingEnabled ?? false);
-  const [mode, setMode] = useState<ConsentPrompt>(tenant.recordingConsentMode ?? "DEFAULT");
-  const [audioUrl, setAudioUrl] = useState<string>(tenant.recordingConsentAudioUrl ?? "");
-
-  useEffect(() => {
-    setEnabled(tenant.recordingEnabled ?? false);
-    setMode(tenant.recordingConsentMode ?? "DEFAULT");
-    setAudioUrl(tenant.recordingConsentAudioUrl ?? "");
-  }, [tenant.recordingEnabled, tenant.recordingConsentMode, tenant.recordingConsentAudioUrl]);
-
-  function onSubmit() {
-    onSave({
-      recordingEnabled: enabled,
-      recordingConsentMode: mode,
-      recordingConsentAudioUrl: audioUrl.trim() || null,
-    });
-  }
-
+function RecordingCard() {
+  // Recording is not available yet, so there is nothing to switch on and
+  // nothing to save. The API refuses recordingEnabled true on both the session
+  // and the tenant with 422 feature-not-available, so a working control here
+  // would only produce an error.
+  //
+  // The card stays rather than disappearing, because recording is a question
+  // customers ask about and a visible "coming soon" answers it. The consent
+  // prompt and consent audio fields are gone: they only ever mattered when
+  // recording was on, and leaving inputs that save nothing is worse than not
+  // showing them.
   return (
     <Card
       title="Recording"
-      description="Capture call audio for QA and dispute resolution."
-      footer={
-        <button type="button" className={primaryBtn} disabled={saving} onClick={onSubmit}>
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-      }
+      description="Call recording is not available yet."
     >
       <Toggle
         label="Recording enabled"
-        checked={enabled}
-        onChange={setEnabled}
-        description="When enabled, calls are recorded and stored against your retention policy."
+        checked={false}
+        onChange={() => {}}
+        disabled
+        description="Coming soon. When it arrives, a call will only be recorded after a consent message that the person on the call hears first."
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
-        <div>
-          <Label>Consent prompt mode</Label>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as ConsentPrompt)}
-            className={selectClass}
-          >
-            <option value="DEFAULT">DEFAULT — Relavoi-provided announcement</option>
-            <option value="CUSTOM">CUSTOM — your uploaded audio</option>
-            <option value="NONE">NONE — only valid if recording is disabled</option>
-          </select>
-        </div>
-        <div>
-          <Label>Consent audio URL (CUSTOM)</Label>
-          <input
-            type="url"
-            value={audioUrl}
-            onChange={(e) => setAudioUrl(e.target.value)}
-            placeholder="https://cdn.example.com/consent.mp3"
-            className={inputClass}
-          />
-        </div>
-      </div>
       <Hint>
-        NDPR requires a consent prompt when recording is enabled. <code className="font-mono">NONE</code> is rejected by the API if recording is on.
+        Nothing is recorded today, and no call audio is stored. We will let you
+        know before this can be switched on.
       </Hint>
     </Card>
   );
@@ -662,14 +615,20 @@ function Toggle({
   checked,
   onChange,
   description,
+  disabled = false,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
   description?: string;
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex items-start justify-between gap-4 cursor-pointer">
+    <label
+      className={`flex items-start justify-between gap-4 ${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      }`}
+    >
       <div className="min-w-0">
         <div className="text-[14px] font-medium text-ink-900">{label}</div>
         {description && <div className="text-[13px] text-ink-500 mt-0.5">{description}</div>}
@@ -678,7 +637,9 @@ function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
-        onClick={() => onChange(!checked)}
+        aria-disabled={disabled}
+        disabled={disabled}
+        onClick={() => !disabled && onChange(!checked)}
         className="relative inline-flex h-11 w-14 -my-2 -mr-1.5 flex-shrink-0 items-center justify-center rounded-full"
       >
         {/* The visible track; the button around it is the 44px tap target. */}

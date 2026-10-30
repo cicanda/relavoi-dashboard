@@ -239,7 +239,9 @@ export default function SessionDetailPage({
           <Block label="Direction Mode" value={s.directionMode} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4 [&>*]:min-w-0">
-          <Block label="Recording" value={s.recordingEnabled ? "Enabled" : "Disabled"} />
+          {/* Recording is not available, so no session is recorded. Stated as a
+              fact about the call rather than as a setting. */}
+          <Block label="Recording" value={s.recordingEnabled ? "Enabled" : "Not recorded"} />
           <Block label="Consent Mode" value={s.consentPrompt} />
           <Block label="Grace Period (min)" value={String(s.gracePeriodMinutes)} />
         </div>
