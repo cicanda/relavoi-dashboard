@@ -234,6 +234,7 @@ function SlotRow({
               ))}
             </ul>
           )}
+          {/* Only on a closed slot: an open one already shows the control. */}
           {editable && !slot.accepting && (
             <div className="text-[11px] text-ink-500 mt-1">
               Remove this one to upload a different file.
