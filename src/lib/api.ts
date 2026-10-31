@@ -412,11 +412,29 @@ export interface KybDetails {
   website: string | null;
 }
 
+/**
+ * One entry per document kind, served in the order a business is asked for
+ * them. `accepting` is false for a kind that already holds its one allowed
+ * document, which is what stops the same certificate being filed twice.
+ */
+export interface KybSlot {
+  kind: KybDocumentKind;
+  label: string;
+  required: boolean;
+  multiple: boolean;
+  accepting: boolean;
+  documents: KybDocument[];
+}
+
 export interface KybState {
   status: KybStatus;
   editable: boolean;
   details: KybDetails;
   documents: KybDocument[];
+  // Optional: a dashboard deploy can briefly run against a backend that
+  // predates the slots, and the card derives them from `documents` when it is
+  // absent rather than rendering an empty document section.
+  slots?: KybSlot[];
   requiredKinds: KybDocumentKind[];
   missingKinds: KybDocumentKind[];
   missingDetails: string[];

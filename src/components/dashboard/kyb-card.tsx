@@ -12,6 +12,7 @@ import {
   type KybDetailsPayload,
   type KybDocument,
   type KybDocumentKind,
+  type KybSlot,
   type KybState,
 } from "@/lib/api";
 import { useToast } from "@/components/toast";
@@ -156,44 +157,7 @@ function StatusBanner({ state, onEdit }: { state: KybState; onEdit: () => void }
   );
 }
 
-// ─── Document row ─────────────────────────────────────────────────────────────
-
-function DocumentRow({
-  doc,
-  editable,
-  onDelete,
-  deleting,
-}: {
-  doc: KybDocument;
-  editable: boolean;
-  onDelete: () => void;
-  deleting: boolean;
-}) {
-  return (
-    <li className="flex items-start gap-3 py-2.5 border-t border-ink-200 first:border-t-0">
-      <FileText className="w-4 h-4 text-ink-400 mt-0.5 shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="text-[13px] text-ink-900 break-words">{KIND_LABELS[doc.kind]}</div>
-        <div className="text-[11px] text-ink-500 break-all">
-          {doc.filename} · {fmtBytes(doc.sizeBytes)} ·{" "}
-          {new Date(doc.uploadedAt).toLocaleDateString()}
-        </div>
-      </div>
-      {editable && (
-        <button
-          onClick={onDelete}
-          disabled={deleting}
-          aria-label={`Remove ${doc.filename}`}
-          className="shrink-0 -my-2 w-11 h-11 lg:w-8 lg:h-8 lg:my-0 flex items-center justify-center rounded-full text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
-    </li>
-  );
-}
-
-// ─── Upload control ───────────────────────────────────────────────────────────
+// ─── Upload progress ─────────────────────────────────────────────────────────
 
 interface PendingUpload {
   id: string;
@@ -202,53 +166,102 @@ interface PendingUpload {
   error?: string;
 }
 
-function UploadRow({
-  kind,
-  required,
-  disabled,
+// ─── Document slot ────────────────────────────────────────────────────────────
+
+/**
+ * One kind, with whatever is filed under it.
+ *
+ * The upload control and the uploaded list used to be two separate sections,
+ * and the control stayed open whatever was already there, which is how a
+ * workspace came to file the same certificate twice. Here they are the same
+ * row: a slot that holds its one allowed document offers a delete, not another
+ * upload. `accepting` comes from the server, so the rule is the server's and
+ * this only renders it.
+ */
+function SlotRow({
+  slot,
+  editable,
   onPick,
+  onDelete,
+  deletingId,
   pending,
 }: {
-  kind: KybDocumentKind;
-  required: boolean;
-  disabled: boolean;
+  slot: KybSlot;
+  editable: boolean;
   onPick: (file: File) => void;
+  onDelete: (doc: KybDocument) => void;
+  deletingId: string | null;
   pending: PendingUpload[];
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const open = editable && slot.accepting;
 
   return (
     <div className="py-3 border-t border-ink-200 first:border-t-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[13px] text-ink-900">
-            {KIND_LABELS[kind]}
-            {required && <span className="text-rose-600 ml-1">*</span>}
+            {KIND_LABELS[slot.kind]}
+            {slot.required && <span className="text-rose-600 ml-1">*</span>}
           </div>
-          <div className="text-[11px] text-ink-500">{ACCEPTED_LABEL}, up to 10 MB</div>
+          {slot.documents.length === 0 ? (
+            <div className="text-[11px] text-ink-500">
+              {editable ? `${ACCEPTED_LABEL}, up to 10 MB` : "Not provided"}
+            </div>
+          ) : (
+            <ul className="mt-1 space-y-0.5">
+              {slot.documents.map((doc) => (
+                <li key={doc.id} className="flex items-start gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-ink-400 mt-[2px] shrink-0" />
+                  <span className="text-[11px] text-ink-500 break-all min-w-0">
+                    {doc.filename} · {fmtBytes(doc.sizeBytes)} ·{" "}
+                    {new Date(doc.uploadedAt).toLocaleDateString()}
+                  </span>
+                  {editable && (
+                    <button
+                      onClick={() => onDelete(doc)}
+                      disabled={deletingId === doc.id}
+                      aria-label={`Remove ${doc.filename}`}
+                      className="shrink-0 -my-1.5 w-11 h-11 lg:w-7 lg:h-7 lg:my-0 flex items-center justify-center rounded-full text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {editable && !slot.accepting && (
+            <div className="text-[11px] text-ink-500 mt-1">
+              Remove this one to upload a different file.
+            </div>
+          )}
         </div>
-        <div className="shrink-0">
-          <input
-            ref={ref}
-            type="file"
-            accept={ACCEPTED_TYPES.join(",")}
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              // Reset first, so picking the same file twice still fires.
-              e.target.value = "";
-              if (f) onPick(f);
-            }}
-          />
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => ref.current?.click()}
-            className={`${secondaryBtn} btn-sm w-full sm:w-auto`}
-          >
-            <Upload className="w-3.5 h-3.5" /> Choose file
-          </button>
-        </div>
+
+        {open && (
+          <div className="shrink-0">
+            <input
+              ref={ref}
+              type="file"
+              accept={ACCEPTED_TYPES.join(",")}
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                // Reset first, so picking the same file twice still fires.
+                e.target.value = "";
+                if (f) onPick(f);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => ref.current?.click()}
+              className={`${secondaryBtn} btn-sm w-full sm:w-auto`}
+            >
+              <Upload className="w-3.5 h-3.5" />{" "}
+              {slot.documents.length > 0 ? "Add another" : "Choose file"}
+            </button>
+          </div>
+        )}
       </div>
 
       {pending.map((p) => (
@@ -390,13 +403,32 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
     }
   }
 
-  const docsByKind = useMemo(() => {
-    const out = new Map<KybDocumentKind, KybDocument[]>();
-    for (const d of state?.documents ?? []) {
-      out.set(d.kind, [...(out.get(d.kind) ?? []), d]);
-    }
-    return out;
-  }, [state?.documents]);
+  /**
+   * The slots to render. Served by the backend; derived here when an older
+   * backend omits them, so the document section never comes up empty during a
+   * deploy in which the two sides are briefly a version apart.
+   */
+  const slots = useMemo<KybSlot[]>(() => {
+    if (state?.slots) return state.slots;
+    const docs = state?.documents ?? [];
+    return UPLOAD_ORDER.map((kind) => {
+      const held = docs.filter((d) => d.kind === kind);
+      const multiple = kind === "OTHER";
+      return {
+        kind,
+        label: KIND_LABELS[kind],
+        required: (state?.requiredKinds ?? []).includes(kind),
+        multiple,
+        accepting: multiple || held.length === 0,
+        documents: held,
+      };
+    });
+  }, [state?.slots, state?.documents, state?.requiredKinds]);
+
+  const uploadedCount = useMemo(
+    () => slots.reduce((n, slot) => n + slot.documents.length, 0),
+    [slots],
+  );
 
   if (q.isLoading) {
     return (
@@ -573,41 +605,34 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
             decide faster.
           </p>
 
-          {(state.documents.length > 0 || !editable) && (
-            <ul className="mb-3">
-              {state.documents.length === 0 && (
-                <li className="py-2 text-[12px] text-ink-500">No documents uploaded.</li>
-              )}
-              {state.documents.map((d) => (
-                <DocumentRow
-                  key={d.id}
-                  doc={d}
-                  editable={editable}
-                  deleting={deletingId === d.id}
-                  onDelete={() => void onDelete(d)}
-                />
-              ))}
-            </ul>
-          )}
-
-          {editable && (
+          {/*
+            One row per kind, filled or open. While a submission is locked only
+            the kinds that were actually filed are shown, so a tenant under
+            review is not presented with six rows of nothing.
+          */}
+          {editable || uploadedCount > 0 ? (
             <div className="rounded-xl border border-ink-200">
               <div className="px-3.5">
-                {UPLOAD_ORDER.map((kind) => (
-                  <UploadRow
-                    key={kind}
-                    kind={kind}
-                    required={state.requiredKinds.includes(kind)}
-                    disabled={!editable}
-                    onPick={(f) => void onPick(kind, f)}
-                    pending={pending[kind] ?? []}
-                  />
-                ))}
+                {(editable ? slots : slots.filter((slot) => slot.documents.length > 0)).map(
+                  (slot) => (
+                    <SlotRow
+                      key={slot.kind}
+                      slot={slot}
+                      editable={editable}
+                      onPick={(f) => void onPick(slot.kind, f)}
+                      onDelete={(d) => void onDelete(d)}
+                      deletingId={deletingId}
+                      pending={pending[slot.kind] ?? []}
+                    />
+                  ),
+                )}
               </div>
             </div>
+          ) : (
+            <p className="py-2 text-[12px] text-ink-500">No documents uploaded.</p>
           )}
 
-          {editable && docsByKind.size > 0 && state.missingKinds.length > 0 && (
+          {editable && uploadedCount > 0 && state.missingKinds.length > 0 && (
             <p className="mt-2 text-[12px] text-amber-700">
               Still needed: {state.missingKinds.map((k) => KIND_LABELS[k]).join(", ")}.
             </p>
