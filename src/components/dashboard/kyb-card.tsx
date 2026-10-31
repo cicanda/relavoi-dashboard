@@ -194,6 +194,9 @@ function SlotRow({
   pending: PendingUpload[];
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  // Both conditions, not just accepting: a locked submission has every slot
+  // closed whatever the kind says, and an empty slot on a submission under
+  // review must not offer an upload the server would refuse with a 409.
   const open = editable && slot.accepting;
 
   return (
