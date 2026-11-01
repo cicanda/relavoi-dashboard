@@ -398,6 +398,14 @@ export interface KybDocument {
   sha256: string;
   uploadedAt: string;
   uploadedBy: string | null;
+  // The date printed on the document, YYYY-MM-DD, not the day it was
+  // uploaded. Null for a kind that carries no date, and for anything filed
+  // before the backend recorded one.
+  issuedOn?: string | null;
+  issueDateRequired?: boolean;
+  // Computed by the backend so this card and the operator console cannot
+  // disagree about whether a document still counts.
+  expired?: boolean;
 }
 
 export interface KybDetails {
@@ -424,7 +432,19 @@ export interface KybSlot {
   required: boolean;
   multiple: boolean;
   accepting: boolean;
+  // True for the proof of address: the upload is refused without a date, so
+  // the form has to ask for it before sending the file.
+  requiresIssueDate?: boolean;
+  maxAgeMonths?: number | null;
   documents: KybDocument[];
+}
+
+/** A filed document that is too old, or too undated, to count. */
+export interface KybExpiredDocument {
+  id: string;
+  kind: KybDocumentKind;
+  issuedOn: string | null;
+  reason: string;
 }
 
 export interface KybState {
@@ -439,6 +459,10 @@ export interface KybState {
   requiredKinds: KybDocumentKind[];
   missingKinds: KybDocumentKind[];
   missingDetails: string[];
+  // What submit would refuse on. Optional for the same reason as `slots`: a
+  // dashboard deploy can briefly run against an older backend.
+  expiredDocuments?: KybExpiredDocument[];
+  proofOfAddressMaxAgeMonths?: number;
   submittedAt: string | null;
   reviewedAt: string | null;
   rejectionReason: string | null;
@@ -478,11 +502,13 @@ export async function uploadKybDocument(
   kind: KybDocumentKind,
   file: File,
   onProgress?: (percent: number) => void,
+  issuedOn?: string,
 ) {
   const form = new FormData();
-  // Field before file, so a server reading parts in order has the kind in hand
-  // by the time the bytes arrive.
+  // Fields before file, so a server reading parts in order has the kind and
+  // the date in hand by the time the bytes arrive.
   form.append("kind", kind);
+  if (issuedOn) form.append("issuedOn", issuedOn);
   form.append("file", file, file.name);
 
   const { data } = await api.post<KybDocument>("/kyb/documents", form, {

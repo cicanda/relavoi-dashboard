@@ -64,6 +64,33 @@ function Label({ children }: { children: ReactNode }) {
   return <label className="field-label">{children}</label>;
 }
 
+/**
+ * A Date as the value an <input type="date"> wants, YYYY-MM-DD.
+ *
+ * Built from the local parts rather than toISOString(), which converts to UTC
+ * first and so hands back yesterday for anyone east of Greenwich in the
+ * evening. The bound on a date picker being a day out is the kind of thing
+ * nobody reports and everybody works around.
+ */
+function toInputDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+/**
+ * A YYYY-MM-DD from the server, shown the way the rest of the card shows
+ * dates.
+ *
+ * Parsed as local parts for the same reason: `new Date("2026-09-14")` is
+ * parsed as UTC midnight and renders as the 13th in any timezone behind it.
+ */
+function fmtIssued(ymd: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return ymd;
+  return new Date(y, m - 1, d).toLocaleDateString();
+}
+
 function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
@@ -188,7 +215,7 @@ function SlotRow({
 }: {
   slot: KybSlot;
   editable: boolean;
-  onPick: (file: File) => void;
+  onPick: (file: File, issuedOn?: string) => void;
   onDelete: (doc: KybDocument) => void;
   deletingId: string | null;
   pending: PendingUpload[];
@@ -198,6 +225,22 @@ function SlotRow({
   // closed whatever the kind says, and an empty slot on a submission under
   // review must not offer an upload the server would refuse with a 409.
   const open = editable && slot.accepting;
+
+  // Asked for before the file, because the server refuses the upload without
+  // it. Collecting it here rather than after the bytes are on the wire means a
+  // person on a slow Nigerian uplink never sends 10 MB only to be told a field
+  // was missing.
+  const needsDate = slot.requiresIssueDate === true;
+  const [issuedOn, setIssuedOn] = useState("");
+  const maxAge = slot.maxAgeMonths ?? 3;
+  // The bounds the server will enforce anyway, handed to the date picker so the
+  // out-of-range days are not offerable in the first place.
+  const today = new Date();
+  const maxDate = toInputDate(today);
+  const earliest = new Date(today);
+  earliest.setMonth(earliest.getMonth() - maxAge);
+  const minDate = toInputDate(earliest);
+  const dateReady = !needsDate || issuedOn !== "";
 
   return (
     <div className="py-3 border-t border-ink-200 first:border-t-0">
@@ -219,6 +262,16 @@ function SlotRow({
                   <span className="text-[11px] text-ink-500 break-all min-w-0">
                     {doc.filename} · {fmtBytes(doc.sizeBytes)} ·{" "}
                     {new Date(doc.uploadedAt).toLocaleDateString()}
+                    {/* The printed date, labelled, so it is not mistaken for
+                        the upload date sitting next to it. */}
+                    {doc.issuedOn && <> · issued {fmtIssued(doc.issuedOn)}</>}
+                    {doc.expired && (
+                      <span className="text-amber-700">
+                        {doc.issuedOn
+                          ? ` · more than ${maxAge} months old, replace it`
+                          : " · no issue date recorded, replace it"}
+                      </span>
+                    )}
                   </span>
                   {editable && (
                     <button
@@ -243,7 +296,22 @@ function SlotRow({
         </div>
 
         {open && (
-          <div className="shrink-0">
+          <div className="shrink-0 flex flex-col gap-1.5 sm:items-end">
+            {needsDate && (
+              <label className="flex flex-col gap-1 sm:items-end">
+                <span className="text-[11px] text-ink-500">
+                  Date on the document (within {maxAge} months)
+                </span>
+                <input
+                  type="date"
+                  value={issuedOn}
+                  min={minDate}
+                  max={maxDate}
+                  onChange={(e) => setIssuedOn(e.target.value)}
+                  className="h-11 lg:h-9 rounded-lg border border-ink-200 bg-white px-2.5 text-[13px] text-ink-900 w-full sm:w-auto"
+                />
+              </label>
+            )}
             <input
               ref={ref}
               type="file"
@@ -253,13 +321,15 @@ function SlotRow({
                 const f = e.target.files?.[0];
                 // Reset first, so picking the same file twice still fires.
                 e.target.value = "";
-                if (f) onPick(f);
+                if (f) onPick(f, needsDate ? issuedOn : undefined);
               }}
             />
             <button
               type="button"
               onClick={() => ref.current?.click()}
-              className={`${secondaryBtn} btn-sm w-full sm:w-auto`}
+              disabled={!dateReady}
+              title={dateReady ? undefined : "Enter the date on the document first"}
+              className={`${secondaryBtn} btn-sm w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Upload className="w-3.5 h-3.5" />{" "}
               {slot.documents.length > 0 ? "Add another" : "Choose file"}
@@ -356,7 +426,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
       toast.error("Could not submit", extractErrorMessage(err, "Something is still missing.")),
   });
 
-  async function onPick(kind: KybDocumentKind, file: File) {
+  async function onPick(kind: KybDocumentKind, file: File, issuedOn?: string) {
     const problem = validateFile(file);
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -376,12 +446,17 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
     }));
 
     try {
-      await uploadKybDocument(kind, file, (percent) => {
-        setPending((p) => ({
-          ...p,
-          [kind]: (p[kind] ?? []).map((u) => (u.id === id ? { ...u, percent } : u)),
-        }));
-      });
+      await uploadKybDocument(
+        kind,
+        file,
+        (percent) => {
+          setPending((p) => ({
+            ...p,
+            [kind]: (p[kind] ?? []).map((u) => (u.id === id ? { ...u, percent } : u)),
+          }));
+        },
+        issuedOn,
+      );
       setPending((p) => ({ ...p, [kind]: (p[kind] ?? []).filter((u) => u.id !== id) }));
       toast.success("Document uploaded");
       await qc.invalidateQueries({ queryKey: ["kyb"] });
@@ -458,8 +533,16 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
   // rejection, it never unlocks a PENDING or APPROVED application.
   const editable = state.editable && canManage;
   const showForm = editable && (state.status !== "REJECTED" || forceEdit || !state.details.legalName);
+  // Anything the server would refuse the submission on. Expired is kept apart
+  // from missing because they ask for different things: a missing document has
+  // to be found, an expired one has to be replaced, and calling a document the
+  // tenant can see listed "missing" is how a support ticket starts.
+  const expiredDocs = state.expiredDocuments ?? [];
   const readyToSubmit =
-    editable && state.missingDetails.length === 0 && state.missingKinds.length === 0;
+    editable &&
+    state.missingDetails.length === 0 &&
+    state.missingKinds.length === 0 &&
+    expiredDocs.length === 0;
 
   return (
     <section id="business-verification" className="card p-[clamp(1.125rem,0.8rem+1.2vw,1.75rem)] scroll-mt-24 xl:grid xl:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] xl:gap-x-10">
@@ -623,7 +706,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
                       key={slot.kind}
                       slot={slot}
                       editable={editable}
-                      onPick={(f) => void onPick(slot.kind, f)}
+                      onPick={(f, issuedOn) => void onPick(slot.kind, f, issuedOn)}
                       onDelete={(d) => void onDelete(d)}
                       deletingId={deletingId}
                       pending={pending[slot.kind] ?? []}
@@ -641,6 +724,20 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
               Still needed: {state.missingKinds.map((k) => KIND_LABELS[k]).join(", ")}.
             </p>
           )}
+
+          {editable && expiredDocs.length > 0 && (
+            <p className="mt-2 text-[12px] text-amber-700">
+              Out of date:{" "}
+              {expiredDocs
+                .map((d) =>
+                  d.issuedOn
+                    ? `${KIND_LABELS[d.kind]} (issued ${fmtIssued(d.issuedOn)})`
+                    : `${KIND_LABELS[d.kind]} (no issue date recorded)`,
+                )
+                .join(", ")}
+              . Remove it and upload a current one.
+            </p>
+          )}
         </div>
 
         {/* ── Submit ── */}
@@ -656,6 +753,11 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
                     state.missingKinds.length > 0
                       ? `Missing documents: ${state.missingKinds
                           .map((k) => KIND_LABELS[k])
+                          .join(", ")}`
+                      : null,
+                    expiredDocs.length > 0
+                      ? `Out of date: ${expiredDocs
+                          .map((d) => KIND_LABELS[d.kind])
                           .join(", ")}`
                       : null,
                   ]
