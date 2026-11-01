@@ -14,13 +14,13 @@
  *
  * Verified on 2026-11-01 by resolving each one in a clean project:
  *
- *   Android  com.github.cicanda:relavoi-android-sdk:v0.2.0-rc.1 from JitPack,
- *            268 KB aar downloaded. `google()` is required in the repository
+ *   Android  com.github.cicanda:relavoi-android-sdk:v0.3.0 from JitPack,
+ *            276 KB aar downloaded. `google()` is required in the repository
  *            list, because the published POM depends on firebase-bom, which
  *            lives only in Google's Maven repository.
- *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.2.0,
- *            revision ab85d70.
- *   Flutter  git ref v0.2.0-rc.1 resolved to cb7d2b8, 68 dependencies.
+ *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.0,
+ *            revision 3680cd7.
+ *   Flutter  git ref v0.3.0 resolved to 6bc30c8, 68 dependencies.
  *
  * JitPack is the interim distribution, not the destination. It builds the
  * public repository on demand at a tag, which is enough to integrate against
@@ -40,19 +40,19 @@ export interface SdkRelease {
 
 export const SDK_RELEASES = {
   android: {
-    tag: "v0.2.0-rc.1",
-    version: "0.2.0-rc.1",
+    tag: "v0.3.0",
+    version: "0.3.0",
     repo: "relavoi-android-sdk",
   },
   ios: {
-    // SPM strips the leading v, so the dependency reads 0.2.0 and the tag is v0.2.0.
-    tag: "v0.2.0",
-    version: "0.2.0",
+    // SPM strips the leading v, so the dependency reads 0.3.0 and the tag is v0.3.0.
+    tag: "v0.3.0",
+    version: "0.3.0",
     repo: "relavoi-ios-sdk",
   },
   flutter: {
-    tag: "v0.2.0-rc.1",
-    version: "0.2.0-rc.1",
+    tag: "v0.3.0",
+    version: "0.3.0",
     repo: "relavoi-flutter-sdk",
   },
 } satisfies Record<string, SdkRelease>;

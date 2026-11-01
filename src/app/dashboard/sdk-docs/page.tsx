@@ -136,37 +136,56 @@ function Tabs({
 // The install snippets live in lib/sdk-releases.ts, with the versions they are
 // built from. These are the init ones.
 //
-// They read a SANDBOX key, deliberately. Every SDK's initialize() still takes
-// an apiKey and an apiSecret, so a snippet that shows a live secret going into
-// BuildConfig or Info.plist is telling a reader to ship a credential that can
-// be pulled out of the app with unzip. See the warning card below the code.
+// From 0.3.0 the SDKs take a token provider: your backend holds the secret and
+// mints a short-lived token for one user, and the app hands that to the SDK.
+// The key and secret form still works and is deprecated.
 const ANDROID_INIT = `// Application.onCreate()
-// RELAVOI_SANDBOX_KEY / _SECRET come from your local gradle.properties or CI,
-// never from a committed file, and never a live key in a shipped build.
 Relavoi.initialize(
-  context = this,
-  apiKey = BuildConfig.RELAVOI_SANDBOX_KEY,
-  apiSecret = BuildConfig.RELAVOI_SANDBOX_SECRET,
+  context = applicationContext,
   tenantId = "{tenant.id}",
+  // Asks YOUR backend, which holds the API secret and calls
+  // POST /v1/auth/sdk-token. Nothing secret is compiled into this app.
+  tokenProvider = { myBackend.relavoiToken() },
 )`;
 
-const IOS_INIT = `// AppDelegate
-// Injected at build time from your CI secrets, not committed to Info.plist,
-// and never a live key in a shipped build.
-Relavoi.initialize(
-  apiKey: Bundle.main.infoDictionary?["RelavoiSandboxKey"] as! String,
-  apiSecret: Bundle.main.infoDictionary?["RelavoiSandboxSecret"] as! String,
-  tenantId: "{tenant.id}"
-)`;
+const IOS_INIT = `// AppDelegate / @main App.init
+Relavoi.initialize(tenantId: "{tenant.id}") {
+  // Asks YOUR backend, which holds the API secret and calls
+  // POST /v1/auth/sdk-token. Nothing secret is compiled into this app.
+  let t = try await MyBackend.relavoiToken()
+  return RelavoiToken(accessToken: t.accessToken, expiresIn: t.expiresIn)
+}`;
 
 const FLUTTER_INIT = `// main() before runApp
-// Pass these with --dart-define at build time, not as committed constants,
-// and never a live key in a shipped build.
 await Relavoi.initialize(
-  apiKey: const String.fromEnvironment('RELAVOI_SANDBOX_KEY'),
-  apiSecret: const String.fromEnvironment('RELAVOI_SANDBOX_SECRET'),
   tenantId: '{tenant.id}',
+  // Asks YOUR backend, which holds the API secret and calls
+  // POST /v1/auth/sdk-token. Nothing secret is compiled into this app.
+  tokenProvider: () async => myBackend.relavoiToken(),
 );`;
+
+/** What the tenant's own backend runs, which is where the secret stays. */
+const BACKEND_MINT = `// On YOUR server, where the API secret lives.
+const tenant = await fetch("https://api.relavoi.com/v1/auth/token", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ apiKey: RELAVOI_API_KEY, apiSecret: RELAVOI_API_SECRET }),
+}).then((r) => r.json());
+
+// One user, narrow scopes, fifteen minutes.
+const device = await fetch("https://api.relavoi.com/v1/auth/sdk-token", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    authorization: \`Bearer \${tenant.accessToken}\`,
+  },
+  body: JSON.stringify({
+    userPhone: "+2348012345678",
+    scope: ["sessions:verify", "sessions:read", "devices:write"],
+  }),
+}).then((r) => r.json());
+
+return device; // { accessToken, expiresIn, scope, subject }`;
 
 // ─── Features ────────────────────────────────────────────────────────────────
 interface FeatureTile {
@@ -292,29 +311,28 @@ export default function SdkDocsPage() {
       <section className="card p-5 mb-5">
         <h2 className="section-title">Initialize</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
-          Once at app startup, with a key, a secret and your tenant ID.
+          Once at app startup, with your tenant ID and a token provider.
         </p>
 
         <div className="callout mb-4 border-brand-amber/30 bg-brand-amber/10">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
             <div className="font-medium text-[14px] mb-1">
-              Never ship a live secret in an app
+              The secret stays on your server
             </div>
             <p className="text-[13px]">
-              Every one of these SDKs takes an API secret at{" "}
-              <code className="font-mono text-[12px]">initialize()</code>, and
-              anything compiled into an app can be read back out of it. A live
-              secret in a published build lets anyone create sessions billed to
-              you, and list every session and call on your workspace.
+              Anything compiled into an app can be read back out of it. A live
+              API secret in a published build lets anyone create sessions
+              billed to you, and list every session and call on your workspace.
             </p>
             <p className="text-[13px] mt-2">
-              So: use a <strong>sandbox</strong> key in builds you distribute,
-              inject it at build time rather than committing it, and keep your
-              live key on your own server, where it can call{" "}
-              <code className="font-mono text-[12px]">POST /v1/sessions</code>{" "}
-              directly. Short-lived SDK tokens, which remove the secret from the
-              app entirely, are designed and not yet built.
+              So from SDK 0.3.0 the app holds no secret at all: your backend
+              mints a short-lived token for one user and the app passes it
+              through. The older{" "}
+              <code className="font-mono text-[12px]">apiKey</code> and{" "}
+              <code className="font-mono text-[12px]">apiSecret</code> form
+              still works and is deprecated; use it with a sandbox key while
+              you develop.
             </p>
           </div>
         </div>
@@ -332,7 +350,26 @@ export default function SdkDocsPage() {
             <div className="eyebrow mb-2">Flutter</div>
             <CodeBlock code={flutterInit} language="dart" />
           </div>
+          <div>
+            <div className="eyebrow mb-2">Your backend</div>
+            <CodeBlock code={BACKEND_MINT} language="javascript" />
+          </div>
         </div>
+
+        <p className="text-[13px] text-ink-500 mt-3">
+          A device token reaches verify, its own user&apos;s sessions, and
+          device registration. It cannot create a session, read the workspace,
+          touch billing or mint another token.{" "}
+          <a
+            href="https://docs.relavoi.com/guides/sdk-tokens"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:no-underline"
+          >
+            How it works
+          </a>
+          .
+        </p>
       </section>
 
       {/* Card 4 — Features */}
