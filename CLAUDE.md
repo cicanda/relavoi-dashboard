@@ -32,21 +32,13 @@ note to a commit message or a pull request description.
 
 ## Genesis works through pull requests
 
-Genesis opens a PR; it is merged by Kay or by us. Three rules, and the first one
-is load-bearing rather than stylistic.
+Genesis opens a PR; it is merged by Kay or by us. Three rules.
 
-**Merge with a merge commit, never squash and never rebase.** On the Vercel
-Hobby plan a private repository only deploys when the head commit is authored
-by the account owner. Squashing or rebasing rewrites authorship onto the
-merger, which would work, but it also throws away Genesis's authorship on their
-own work. A merge commit keeps their commits intact and is itself authored by
-`admin@cicanda.com`, so the commit Vercel builds satisfies the author check
-while their history survives. Use "Create a merge commit" in the GitHub UI, or
-`git merge --no-ff`.
-
-A direct consequence worth knowing before this repository is made private: a
-push straight to main by any account other than the owner will not deploy. That
-is the whole reason the PR route exists here.
+**Merge with a merge commit, never squash and never rebase.** Squashing or
+rebasing rewrites Genesis's commits onto whoever pressed the button, which
+throws away their authorship of their own work. A merge commit keeps their
+commits intact under their name and keeps the review trail readable. Use
+"Create a merge commit" in the GitHub UI, or `git merge --no-ff`.
 
 **Check the PR builds locally before merging**, and report anything that fails
 rather than merging over it. There is no lint script in this repository, so the
