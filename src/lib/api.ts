@@ -418,6 +418,7 @@ export interface KybDetails {
  * document, which is what stops the same certificate being filed twice.
  */
 export interface KybSlot {
+  // `multiple` is true only for OTHER; every named kind is a single copy.
   kind: KybDocumentKind;
   label: string;
   required: boolean;
