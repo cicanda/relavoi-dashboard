@@ -126,6 +126,19 @@ export function Sidebar() {
         />
       )}
 
+      {/*
+        The panel is fixed, so it occupies no width in the flex row. This holds
+        the space it used to, which is why the layout files did not have to
+        learn about the collapsed state: the spacer reads the same store the
+        panel does, so the two cannot disagree.
+      */}
+      <div
+        aria-hidden="true"
+        className={`hidden lg:block lg:flex-shrink-0 ${
+          collapsed ? "lg:w-[4.5rem]" : "lg:w-64"
+        }`}
+      />
+
       <aside
         id="dashboard-nav"
         aria-label="Dashboard navigation"
@@ -141,9 +154,14 @@ export function Sidebar() {
           // opened, so the main column gets the full viewport width. The slide
           // itself lives in globals.css under .sidebar-panel.
           "sidebar-panel",
+          // Fixed at every width, which is the change: it used to be
+          // `lg:sticky lg:h-screen` from lg up, and sticky plus a 100vh height
+          // inside a flex row whose height is the content means the panel ends
+          // one viewport down while the row keeps going. That is the empty
+          // strip under the nav on any page long enough to scroll. Out of flow
+          // with inset-y-0 it is exactly the viewport, always, and the main
+          // column scrolls past it instead of dragging it along.
           "fixed inset-y-0 left-0 z-50 w-[17rem] max-w-[85vw] flex flex-col bg-bone-50 border-r border-ink-200 shadow-raised lg:shadow-none",
-          // From lg it is a normal column again and no transform applies.
-          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:flex-shrink-0",
           collapsed ? "lg:w-[4.5rem]" : "lg:w-64",
         ].join(" ")}
       >

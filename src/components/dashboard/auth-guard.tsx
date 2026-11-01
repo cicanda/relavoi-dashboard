@@ -16,10 +16,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!token) router.replace("/login");
   }, [hasHydrated, token, router]);
 
-  // Hydrate tenant/user from /tenants/me if missing on a hard reload.
+  // Refresh tenant/user from /tenants/me on every load, not only when they are
+  // missing.
+  //
+  // This used to be `&& !tenant`, so once the store held a tenant it was never
+  // asked again. The tenant is persisted in localStorage, so a rename made
+  // anywhere else, including in the operator console, left every surface that
+  // reads the store showing the old name until the user signed out. The only
+  // screen that corrected itself was Settings, because it fetches /config and
+  // writes the result back, which is exactly the shape of two sources
+  // disagreeing: one cached at login, one fetched now.
+  //
+  // staleTime keeps this to one request a minute, and the store stays as the
+  // synchronous read for render. The server is the source of truth.
   useQuery({
     queryKey: ["me"],
-    enabled: !!token && hasHydrated && !tenant,
+    enabled: !!token && hasHydrated,
     queryFn: async () => {
       const data = await getMe();
       if (data.user) {

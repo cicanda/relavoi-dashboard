@@ -2,21 +2,25 @@
 
 import { useMemo, useState } from "react";
 import {
-  Bell,
+  AlertTriangle,
   Check,
   Copy,
+  Download,
   ExternalLink,
-  MessageSquare,
   Phone,
   Radio,
   ShieldCheck,
-  Star,
   type LucideIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-store";
 import { PageHeader } from "@/components/page-header";
-import { useToast } from "@/components/toast";
+import {
+  ANDROID_INSTALL,
+  FLUTTER_INSTALL,
+  IOS_INSTALL,
+  SDK_RELEASES,
+} from "@/lib/sdk-releases";
 
 // ─── Copy button ─────────────────────────────────────────────────────────────
 function CopyButton({
@@ -128,45 +132,41 @@ function Tabs({
 }
 
 // ─── Snippets ────────────────────────────────────────────────────────────────
-const ANDROID_INSTALL = `// settings.gradle.kts
-dependencyResolutionManagement {
-  repositories {
-    mavenCentral()
-    maven("https://maven.relavoi.com/releases")
-  }
-}
-
-// app/build.gradle.kts
-dependencies {
-  implementation("com.relavoi:sdk:0.1.0")
-}`;
-
-const IOS_INSTALL = `// Package.swift
-dependencies: [
-  .package(url: "https://github.com/relavoi/relavoi-ios-sdk", from: "0.1.0")
-]
-
-.target(
-  name: "MyApp",
-  dependencies: [
-    .product(name: "RelavoiSDK", package: "relavoi-ios-sdk")
-  ]
-)`;
-
+//
+// The install snippets live in lib/sdk-releases.ts, with the versions they are
+// built from. These are the init ones.
+//
+// They read a SANDBOX key, deliberately. Every SDK's initialize() still takes
+// an apiKey and an apiSecret, so a snippet that shows a live secret going into
+// BuildConfig or Info.plist is telling a reader to ship a credential that can
+// be pulled out of the app with unzip. See the warning card below the code.
 const ANDROID_INIT = `// Application.onCreate()
+// RELAVOI_SANDBOX_KEY / _SECRET come from your local gradle.properties or CI,
+// never from a committed file, and never a live key in a shipped build.
 Relavoi.initialize(
   context = this,
-  apiKey = BuildConfig.RELAVOI_API_KEY,
-  apiSecret = BuildConfig.RELAVOI_API_SECRET,
+  apiKey = BuildConfig.RELAVOI_SANDBOX_KEY,
+  apiSecret = BuildConfig.RELAVOI_SANDBOX_SECRET,
   tenantId = "{tenant.id}",
 )`;
 
 const IOS_INIT = `// AppDelegate
+// Injected at build time from your CI secrets, not committed to Info.plist,
+// and never a live key in a shipped build.
 Relavoi.initialize(
-  apiKey: Bundle.main.infoDictionary?["RelavoiApiKey"] as! String,
-  apiSecret: Bundle.main.infoDictionary?["RelavoiApiSecret"] as! String,
+  apiKey: Bundle.main.infoDictionary?["RelavoiSandboxKey"] as! String,
+  apiSecret: Bundle.main.infoDictionary?["RelavoiSandboxSecret"] as! String,
   tenantId: "{tenant.id}"
 )`;
+
+const FLUTTER_INIT = `// main() before runApp
+// Pass these with --dart-define at build time, not as committed constants,
+// and never a live key in a shipped build.
+await Relavoi.initialize(
+  apiKey: const String.fromEnvironment('RELAVOI_SANDBOX_KEY'),
+  apiSecret: const String.fromEnvironment('RELAVOI_SANDBOX_SECRET'),
+  tenantId: '{tenant.id}',
+);`;
 
 // ─── Features ────────────────────────────────────────────────────────────────
 interface FeatureTile {
@@ -178,45 +178,36 @@ interface FeatureTile {
 const FEATURES: FeatureTile[] = [
   {
     title: "Call Masking",
-    description: "Connect users without revealing real numbers",
+    description: "Create a session, get a proxy number, connect two people",
     icon: Phone,
   },
   {
-    title: "SMS Masking",
-    description: "Two-way SMS through the same proxy",
-    icon: MessageSquare,
-  },
-  {
     title: "Call Verification",
-    description: "Native banners show when a call is from your platform",
+    description: "Tell the user whether the call really came from you",
     icon: ShieldCheck,
-  },
-  {
-    title: "Push Notifications",
-    description: "Branded FCM/APNs payloads on incoming calls",
-    icon: Bell,
   },
   {
     title: "Real-time Events",
     description: "WebSocket stream of session and call events",
     icon: Radio,
   },
-  {
-    title: "Post-call Feedback",
-    description: "Drop-in rating + issue reporter components",
-    icon: Star,
-  },
 ];
 
 // ─── Page ────────────────────────────────────────────────────────────────────
-type InstallTab = "android" | "ios" | "web";
+type InstallTab = "android" | "ios" | "flutter";
+
+/** Published on docs.relavoi.com, generated from the backend's openapi.yaml. */
+const API_REFERENCE_URL = "https://docs.relavoi.com/api-reference/sessions";
+const POSTMAN_COLLECTION_URL =
+  "https://docs.relavoi.com/relavoi.postman_collection.json";
+const POSTMAN_ENVIRONMENT_URL =
+  "https://docs.relavoi.com/relavoi.postman_environment.json";
+const POSTMAN_GUIDE_URL = "https://docs.relavoi.com/api-reference/tools";
 
 export default function SdkDocsPage() {
   const { tenant } = useAuth();
-  const toast = useToast();
 
   const [installTab, setInstallTab] = useState<InstallTab>("android");
-  const [notifyEmail, setNotifyEmail] = useState("");
 
   const tenantId = tenant?.id ?? "YOUR_TENANT_ID";
 
@@ -228,19 +219,10 @@ export default function SdkDocsPage() {
     () => IOS_INIT.replaceAll("{tenant.id}", tenantId),
     [tenantId],
   );
-
-  function onNotifyMe() {
-    setNotifyEmail("");
-    toast.success("We'll let you know");
-  }
-
-  function onApiRef() {
-    toast.info("Coming soon");
-  }
-
-  function onPostman() {
-    toast.info("Coming soon");
-  }
+  const flutterInit = useMemo(
+    () => FLUTTER_INIT.replaceAll("{tenant.id}", tenantId),
+    [tenantId],
+  );
 
   return (
     <div>
@@ -272,45 +254,37 @@ export default function SdkDocsPage() {
 
         <Tabs
           tabs={[
-            { id: "android", label: "Android (Gradle)" },
-            { id: "ios", label: "iOS (Swift Package Manager)" },
-            { id: "web", label: "Web (coming soon)" },
+            { id: "android", label: `Android ${SDK_RELEASES.android.version}` },
+            { id: "ios", label: `iOS ${SDK_RELEASES.ios.version}` },
+            { id: "flutter", label: `Flutter ${SDK_RELEASES.flutter.version}` },
           ]}
           active={installTab}
           onChange={(id) => setInstallTab(id as InstallTab)}
         />
 
         {installTab === "android" && (
-          <CodeBlock code={ANDROID_INSTALL} language="kotlin" />
+          <>
+            <CodeBlock code={ANDROID_INSTALL} language="kotlin" />
+            <p className="text-[13px] text-ink-500 mt-3">
+              JitPack builds the public repository at the tag, which is the
+              interim distribution until the SDK is on Maven Central.{" "}
+              <code className="font-mono text-[12px]">google()</code> is
+              required in the repository list: the SDK depends on
+              firebase-bom, which only Google&apos;s repository serves.
+            </p>
+          </>
         )}
         {installTab === "ios" && (
           <CodeBlock code={IOS_INSTALL} language="swift" />
         )}
-        {installTab === "web" && (
-          <div className="bg-bone-50 border border-dashed border-ink-300 rounded-2xl p-8 flex flex-col items-center text-center">
-            <div className="section-title mb-1">
-              Web SDK coming soon
-            </div>
-            <p className="text-[13px] text-ink-500 max-w-sm mb-4">
-              Drop your email to hear when the browser SDK is ready.
+        {installTab === "flutter" && (
+          <>
+            <CodeBlock code={FLUTTER_INSTALL} language="yaml" />
+            <p className="text-[13px] text-ink-500 mt-3">
+              A git dependency pinned to a tag, until the package is on
+              pub.dev.
             </p>
-            <div className="flex items-stretch gap-2 w-full max-w-sm">
-              <input
-                type="email"
-                value={notifyEmail}
-                onChange={(e) => setNotifyEmail(e.target.value)}
-                placeholder="you@company.com"
-                className="field flex-1"
-              />
-              <button
-                type="button"
-                onClick={onNotifyMe}
-                className="btn btn-primary btn-sm"
-              >
-                Notify me
-              </button>
-            </div>
-          </div>
+          </>
         )}
       </section>
 
@@ -318,22 +292,45 @@ export default function SdkDocsPage() {
       <section className="card p-5 mb-5">
         <h2 className="section-title">Initialize</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
-          After installation, initialize once at app startup with your API key,
-          secret, and tenant ID.
+          Once at app startup, with a key, a secret and your tenant ID.
         </p>
+
+        <div className="callout mb-4 border-brand-amber/30 bg-brand-amber/10">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <div className="font-medium text-[14px] mb-1">
+              Never ship a live secret in an app
+            </div>
+            <p className="text-[13px]">
+              Every one of these SDKs takes an API secret at{" "}
+              <code className="font-mono text-[12px]">initialize()</code>, and
+              anything compiled into an app can be read back out of it. A live
+              secret in a published build lets anyone create sessions billed to
+              you, and list every session and call on your workspace.
+            </p>
+            <p className="text-[13px] mt-2">
+              So: use a <strong>sandbox</strong> key in builds you distribute,
+              inject it at build time rather than committing it, and keep your
+              live key on your own server, where it can call{" "}
+              <code className="font-mono text-[12px]">POST /v1/sessions</code>{" "}
+              directly. Short-lived SDK tokens, which remove the secret from the
+              app entirely, are designed and not yet built.
+            </p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <div className="eyebrow mb-2">
-              Android
-            </div>
+            <div className="eyebrow mb-2">Android</div>
             <CodeBlock code={androidInit} language="kotlin" />
           </div>
           <div>
-            <div className="eyebrow mb-2">
-              iOS
-            </div>
+            <div className="eyebrow mb-2">iOS</div>
             <CodeBlock code={iosInit} language="swift" />
+          </div>
+          <div>
+            <div className="eyebrow mb-2">Flutter</div>
+            <CodeBlock code={flutterInit} language="dart" />
           </div>
         </div>
       </section>
@@ -342,7 +339,8 @@ export default function SdkDocsPage() {
       <section className="card p-5 mb-5">
         <h2 className="section-title">What you get out of the box</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
-          Every SDK release ships these capabilities by default.
+          Verified against the released SDKs on all three platforms. Anything
+          not listed here is not in them.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -372,32 +370,52 @@ export default function SdkDocsPage() {
       <section className="card p-5">
         <h2 className="section-title">Resources</h2>
         <p className="text-sm text-ink-500 mt-1 mb-4">
-          Deep dives, references, and tooling.
+          The reference, and the collection to try it with.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onApiRef();
-            }}
+            href={API_REFERENCE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn btn-secondary btn-sm"
           >
             View full API reference
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
           <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onPostman();
-            }}
+            href={POSTMAN_COLLECTION_URL}
+            download="relavoi.postman_collection.json"
             className="btn btn-secondary btn-sm"
           >
-            Open in Postman
-            <ExternalLink className="w-3.5 h-3.5" />
+            Download Postman collection
+            <Download className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href={POSTMAN_ENVIRONMENT_URL}
+            download="relavoi.postman_environment.json"
+            className="btn btn-secondary btn-sm"
+          >
+            Postman environment
+            <Download className="w-3.5 h-3.5" />
           </a>
         </div>
+        <p className="text-[13px] text-ink-500 mt-3">
+          Import both files, run{" "}
+          <span className="font-mono text-[12px]">Authentication</span> &rarr;
+          the token request, and paste the{" "}
+          <span className="font-mono text-[12px]">accessToken</span> into the
+          environment. The environment ships with empty, masked variables and no
+          secrets.{" "}
+          <a
+            href={POSTMAN_GUIDE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:no-underline"
+          >
+            Full instructions
+          </a>
+          .
+        </p>
       </section>
     </div>
   );
