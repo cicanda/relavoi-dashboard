@@ -452,7 +452,7 @@ function KeyCards() {
             onClick={() => setCreds(null)}
             className="btn btn-primary btn-sm mt-5"
           >
-            I've stored them
+            I&apos;ve stored them
           </button>
         </Modal>
       )}

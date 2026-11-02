@@ -103,6 +103,20 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 /** Client-side gate. The server re-checks by magic bytes regardless. */
+/**
+ * A client-side id for one queued upload, used as a React key and to match a
+ * progress event back to its row. Never leaves the browser.
+ *
+ * Module scope, not inline in the component: Date.now() and Math.random() are
+ * impure, and react-hooks/purity rejects an impure call anywhere it cannot
+ * prove is off the render path. It is in fact only ever called from an event
+ * handler, so the warning is about where the code sits rather than when it
+ * runs, and moving it here is the honest fix instead of a disable comment.
+ */
+function queuedUploadId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function validateFile(file: File): string | null {
   if (file.size === 0) return "That file is empty.";
   if (file.size > MAX_BYTES) {
@@ -430,7 +444,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
 
   async function onPick(kind: KybDocumentKind, file: File, issuedOn?: string) {
     const problem = validateFile(file);
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const id = queuedUploadId();
 
     if (problem) {
       // Surfaced inline against the row, not just as a toast, so it is clear

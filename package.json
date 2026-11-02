@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "check:copy": "node check-em-dashes.js",
-    "check:sdk-versions": "node scripts/check-sdk-versions.mjs"
+    "check:sdk-versions": "node scripts/check-sdk-versions.mjs",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.13",
@@ -26,6 +27,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
