@@ -178,6 +178,30 @@ export async function changePassword(currentPassword: string, newPassword: strin
   return data;
 }
 
+/**
+ * Verification and reset.
+ *
+ * The three unauthenticated calls go through `api` like everything else, which
+ * means the bearer interceptor may attach a token. Harmless: the endpoints
+ * ignore it, and a signed-in person resetting their own password is a normal
+ * thing to do.
+ */
+export async function sendVerificationEmail() {
+  await api.post("/auth/verify-email/send");
+}
+
+export async function verifyEmail(token: string) {
+  await api.post("/auth/verify-email", { token });
+}
+
+export async function requestPasswordReset(email: string) {
+  await api.post("/auth/password-reset/request", { email });
+}
+
+export async function resetPassword(token: string, password: string) {
+  await api.post("/auth/password-reset", { token, password });
+}
+
 export async function rotateApiKey() {
   const { data } = await api.post<{ apiKey: string; apiSecret: string }>("/auth/rotate-key");
   return data;
