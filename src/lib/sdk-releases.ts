@@ -12,15 +12,26 @@
  * `npm run check:sdk-versions` fails if these stop matching the tags on the
  * public repositories.
  *
- * Verified on 2026-11-01 by resolving each one in a clean project:
+ * Verified on 2026-11-02 by resolving each one in a clean scratch project:
  *
- *   Android  com.github.cicanda:relavoi-android-sdk:v0.3.0 from JitPack,
- *            276 KB aar downloaded. `google()` is required in the repository
- *            list, because the published POM depends on firebase-bom, which
- *            lives only in Google's Maven repository.
- *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.0,
- *            revision 3680cd7.
- *   Flutter  git ref v0.3.0 resolved to 6bc30c8, 68 dependencies.
+ *   Android  com.github.cicanda:relavoi-android-sdk:v0.3.1 from JitPack, in a
+ *            real Android project: 269 KB aar, 74 artifacts on the release
+ *            runtime classpath. `google()` is required in the repository list,
+ *            because the published POM imports firebase-bom and depends on
+ *            firebase-messaging-ktx, which only Google's repository serves.
+ *            Note that a non-Android Gradle project cannot resolve this at
+ *            all: the aar needs variant-aware resolution, and without it the
+ *            BOM-managed firebase version comes through empty.
+ *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.1,
+ *            revision 65cc1f6.
+ *   Flutter  git ref v0.3.1 resolved to 810d1d7, version 0.3.1, 68
+ *            dependencies.
+ *
+ * JitPack builds a tag the first time somebody asks for it, so a freshly cut
+ * tag is not instantly resolvable and the first request can time out while the
+ * build runs. Anonymous requests are also rate limited, which looks like a
+ * timeout or a bogus "private repository" answer from its API rather than a
+ * 429. Both are reasons the version here should move only after a real resolve.
  *
  * JitPack is the interim distribution, not the destination. It builds the
  * public repository on demand at a tag, which is enough to integrate against
@@ -40,19 +51,19 @@ export interface SdkRelease {
 
 export const SDK_RELEASES = {
   android: {
-    tag: "v0.3.0",
-    version: "0.3.0",
+    tag: "v0.3.1",
+    version: "0.3.1",
     repo: "relavoi-android-sdk",
   },
   ios: {
-    // SPM strips the leading v, so the dependency reads 0.3.0 and the tag is v0.3.0.
-    tag: "v0.3.0",
-    version: "0.3.0",
+    // SPM strips the leading v, so the dependency reads 0.3.1 and the tag is v0.3.1.
+    tag: "v0.3.1",
+    version: "0.3.1",
     repo: "relavoi-ios-sdk",
   },
   flutter: {
-    tag: "v0.3.0",
-    version: "0.3.0",
+    tag: "v0.3.1",
+    version: "0.3.1",
     repo: "relavoi-flutter-sdk",
   },
 } satisfies Record<string, SdkRelease>;
