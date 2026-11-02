@@ -127,17 +127,9 @@ export default function SettingsPage() {
 
         <RecordingCard />
 
-        <PushCard
-          tenant={tenant}
-          onSave={(patch) => patchMut.mutate(patch)}
-          saving={patchMut.isPending}
-        />
+        <PushCard />
 
-        <SmsCard
-          tenant={tenant}
-          onSave={(patch) => patchMut.mutate(patch)}
-          saving={patchMut.isPending}
-        />
+        <SmsCard />
 
         <WorkspaceSetupCard
           tenant={tenant}
@@ -772,127 +764,68 @@ function Toggle({
 
 // ─── Push ───────────────────────────────────────────────────────────────────
 
-function PushCard({
-  tenant,
-  onSave,
-  saving,
-}: {
-  tenant: Tenant;
-  onSave: (patch: Partial<Tenant>) => void;
-  saving: boolean;
-}) {
-  const push = readPush(tenant);
-  const [enabled, setEnabled] = useState<boolean>(push.push_enabled ?? true);
-  const [title, setTitle] = useState<string>(
-    push.push_title_template ?? "Incoming call from {tenant_name}",
-  );
-  const [body, setBody] = useState<string>(
-    push.push_body_template ?? "Your {tenant_name} order {order_id} is calling.",
-  );
-
-  useEffect(() => {
-    const p = readPush(tenant);
-    setEnabled(p.push_enabled ?? true);
-    setTitle(p.push_title_template ?? "Incoming call from {tenant_name}");
-    setBody(p.push_body_template ?? "Your {tenant_name} order {order_id} is calling.");
-  }, [tenant]);
-
-  function onSubmit() {
-    const merged: PushConfig = {
-      ...readPush(tenant),
-      push_enabled: enabled,
-      push_title_template: title,
-      push_body_template: body,
-    };
-    onSave({ pushConfig: merged as Record<string, unknown> });
-  }
-
+/**
+ * Push notifications.
+ *
+ * This was a settings card: an enabled toggle, a title template and a body
+ * template. All three saved and none was read, because the dashboard wrote
+ * push_title_template and push_body_template while the service looked for
+ * title and body. That mismatch is fixed and the keys are applied now.
+ *
+ * What is still missing is delivery. No push credentials are configured in
+ * production, so nothing reaches a device whatever is set here. A settings
+ * card for an effect that cannot happen is the defect the audit was about, so
+ * the fields are hidden until a notification can actually arrive.
+ *
+ * Nothing is cleared. A workspace that configured wording keeps it, and it
+ * takes effect when the credentials exist. The API still accepts pushConfig,
+ * which is documented.
+ */
+function PushCard() {
   return (
-    <Card
-      title="Push notifications"
-      description="Branded push messages delivered when masked calls are initiated."
-      footer={
-        <button type="button" className={primaryBtn} disabled={saving} onClick={onSubmit}>
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-      }
-    >
-      <Toggle
-        label="Push enabled"
-        checked={enabled}
-        onChange={setEnabled}
-        description="Deliver push notifications via FCM (Android) and APNs (iOS)."
-      />
-      <div>
-        <Label>Title template</Label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className={inputClass}
-        />
-      </div>
-      <div>
-        <Label>Body template</Label>
-        <input
-          type="text"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          className={inputClass}
-        />
-      </div>
-      <Hint>
-        Available variables: <code className="font-mono">{"{tenant_name}"}</code> and{" "}
-        <code className="font-mono">{"{order_id}"}</code>, which is the reference your app
-        attached to the session. A variable we cannot fill is left blank, so do not invent
-        new ones.
-      </Hint>
+    <Card title="Push notifications" description="Not available yet.">
+      <p className="text-[13px] text-ink-500 leading-relaxed">
+        Your customer sees the proxy number when the call arrives. A branded notification just
+        before it is built on our side but is not switched on, so none are being delivered.
+        There is nothing to set here until they are, and we will tell you when that changes.
+      </p>
+      <p className="text-[12px] text-ink-400 mt-3">
+        Your app can register device tokens today. That is the half that works, and it means
+        nothing has to change in your app when delivery starts.
+      </p>
     </Card>
   );
 }
 
 // ─── SMS ────────────────────────────────────────────────────────────────────
 
-function SmsCard({
-  tenant,
-  onSave,
-  saving,
-}: {
-  tenant: Tenant;
-  onSave: (patch: Partial<Tenant>) => void;
-  saving: boolean;
-}) {
-  const push = readPush(tenant);
-  const [autoReply, setAutoReply] = useState<boolean>(push.sms_auto_reply_on_expired ?? false);
-
-  useEffect(() => {
-    setAutoReply(readPush(tenant).sms_auto_reply_on_expired ?? false);
-  }, [tenant]);
-
-  function onSubmit() {
-    const merged: PushConfig = {
-      ...readPush(tenant),
-      sms_auto_reply_on_expired: autoReply,
-    };
-    onSave({ pushConfig: merged as Record<string, unknown> });
-  }
-
+/**
+ * SMS.
+ *
+ * This was an "Auto-reply on expired sessions" toggle. It wrote
+ * sms_auto_reply_on_expired into the pushConfig blob, nothing has ever read
+ * that key, and there is no auto-reply implementation to read it: a text to a
+ * closed session's number matches no live session and goes nowhere. There is
+ * a tenants.sms_auto_reply_on_expired column from the first migration which
+ * nothing reads either.
+ *
+ * So the toggle described a behaviour that does not exist, and a workspace
+ * that switched it on had every reason to believe its customers were getting a
+ * reply. Found while hiding the push card, which was the same defect.
+ *
+ * Stored values are left alone.
+ */
+function SmsCard() {
   return (
-    <Card
-      title="SMS"
-      description="How SMS to expired masking numbers is handled."
-      footer={
-        <button type="button" className={primaryBtn} disabled={saving} onClick={onSubmit}>
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-      }
-    >
-      <Toggle
-        label="Auto-reply on expired sessions"
-        checked={autoReply}
-        onChange={setAutoReply}
-        description="Send an automatic SMS reply when someone texts a proxy number whose session has expired."
-      />
+    <Card title="SMS" description="What happens to a text sent to a masking number.">
+      <p className="text-[13px] text-ink-500 leading-relaxed">
+        While a session is live, a text to its masking number is passed on to the other person,
+        and a reply comes back the same way. Nothing is sent automatically, and a text to a
+        number whose session is over is not answered.
+      </p>
+      <p className="text-[12px] text-ink-400 mt-3">
+        There is no API for sending a message yourself yet. Tell us if you need one.
+      </p>
     </Card>
   );
 }
