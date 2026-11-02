@@ -4,6 +4,7 @@ import axios, { AxiosError, type AxiosInstance } from "axios";
 import { readPersistedToken } from "./auth-store";
 import type {
   DirectionMode,
+  Role,
   Tenant,
   TenantUser,
   Session,
@@ -228,7 +229,15 @@ export async function patchConfig(patch: Partial<Tenant>) {
 
 // ─── Sessions ─────────────────────────────────────────────────────────────────
 export async function listSessions(params: {
+  /** One exact state. */
   state?: string;
+  /**
+   * A group of states: "active" (pending, active, in grace), "ended"
+   * (expired, failed) or "all". Ending a session no longer leaves it in grace
+   * when the grace period is zero, so an ended session goes straight to
+   * EXPIRED and has to stay findable.
+   */
+  status?: "active" | "ended" | "all";
   limit?: number;
   after?: string;
 } = {}) {
@@ -369,6 +378,23 @@ export async function listWebhookLogs(params: { limit?: number; after?: string }
 }
 
 // ─── Invite team member ───────────────────────────────────────────────────────
+export interface TeamMember {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  isActive: boolean;
+  /** Null for someone invited who has not signed in yet. */
+  lastLoginAt: string | null;
+  createdAt: string;
+  isYou: boolean;
+}
+
+export async function listTeam() {
+  const { data } = await api.get<{ data: TeamMember[] }>("/auth/dashboard/users");
+  return data.data;
+}
+
 export async function inviteUser(email: string, role: "OWNER" | "ADMIN" | "VIEWER") {
   const { data } = await api.post<{ userId: string; tempPassword: string }>(
     "/auth/dashboard/invite",
@@ -418,6 +444,8 @@ export interface KybDetails {
   contactName: string | null;
   contactPhone: string | null;
   website: string | null;
+  /** Profile links, any number, each https. Empty when none were given. */
+  socialLinks: string[];
 }
 
 /**
@@ -486,6 +514,7 @@ export type KybDetailsPayload = {
   contactName: string;
   contactPhone: string;
   website?: string | null;
+  socialLinks?: string[];
 };
 
 export async function putKybDetails(payload: KybDetailsPayload) {

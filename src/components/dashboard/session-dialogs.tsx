@@ -190,10 +190,27 @@ export function PhoneField({
 }
 
 // ─── Create ─────────────────────────────────────────────────────────────────────
-const DIRECTIONS: Array<{ value: DirectionMode; label: string }> = [
-  { value: "BIDIRECTIONAL", label: "Both ways" },
-  { value: "A_TO_B_ONLY", label: "Rider to customer only" },
-  { value: "B_TO_A_ONLY", label: "Customer to rider only" },
+// Wording matters here, because the one-way modes refuse a real call from a
+// real person. The first live test calls were four refusals out of five, all
+// correct by the session's mode and none of it obvious from "Rider to customer
+// only". So each option says plainly who is refused, and both ways stays the
+// default.
+const DIRECTIONS: Array<{ value: DirectionMode; label: string; hint: string }> = [
+  {
+    value: "BIDIRECTIONAL",
+    label: "Both ways",
+    hint: "Either person can call the proxy number and reach the other.",
+  },
+  {
+    value: "A_TO_B_ONLY",
+    label: "Only the rider or agent can call",
+    hint: "If the customer calls the proxy number, the call is refused.",
+  },
+  {
+    value: "B_TO_A_ONLY",
+    label: "Only the customer can call",
+    hint: "If the rider or agent calls the proxy number, the call is refused.",
+  },
 ];
 
 /**
@@ -363,7 +380,7 @@ export function CreateSessionDialog({
             {DIRECTIONS.map((d) => (
               <label
                 key={d.value}
-                className={`flex items-center gap-2.5 border rounded-xl px-3.5 h-11 cursor-pointer transition-colors ${
+                className={`flex items-start gap-2.5 border rounded-xl px-3.5 py-2.5 cursor-pointer transition-colors ${
                   direction === d.value
                     ? "border-ink-900 bg-bone-50 ring-1 ring-ink-900"
                     : "border-ink-200 hover:bg-bone-50"
@@ -375,9 +392,12 @@ export function CreateSessionDialog({
                   value={d.value}
                   checked={direction === d.value}
                   onChange={() => setDirection(d.value)}
-                  className="accent-ink-900"
+                  className="accent-ink-900 mt-0.5"
                 />
-                <span className="text-sm text-ink-900">{d.label}</span>
+                <span className="block">
+                  <span className="block text-sm text-ink-900">{d.label}</span>
+                  <span className="block mt-0.5 text-[12px] text-ink-400">{d.hint}</span>
+                </span>
               </label>
             ))}
           </div>

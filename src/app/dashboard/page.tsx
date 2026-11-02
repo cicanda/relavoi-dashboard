@@ -16,7 +16,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 
-import { listSessions, listCalls, getConfig } from "@/lib/api";
+import { listSessions, listCalls, getConfig, getUsage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-store";
 import { useKybBannerCarriesSandboxNote } from "@/components/dashboard/kyb-gate";
 import { truncId, fmtRelative, fmtNumber } from "@/lib/format";
@@ -77,15 +77,18 @@ export default function OverviewPage() {
     toast.error(message);
   }
 
+  // "active" is the group, not the single ACTIVE state: a session still
+  // waiting for its first call (PENDING) or inside its grace period is live
+  // and belongs on this panel. Filtering on ACTIVE alone hid both.
   const activeQ = useQuery({
     queryKey: ["overview", "active-sessions"],
-    queryFn: () => listSessions({ state: "ACTIVE", limit: 100 }),
+    queryFn: () => listSessions({ status: "active", limit: 100 }),
     staleTime: 30_000,
   });
 
   const activeRecentQ = useQuery({
     queryKey: ["overview", "active-recent"],
-    queryFn: () => listSessions({ state: "ACTIVE", limit: 10 }),
+    queryFn: () => listSessions({ status: "active", limit: 10 }),
     staleTime: 30_000,
   });
 
@@ -95,6 +98,15 @@ export default function OverviewPage() {
     return d.toISOString();
   }, []);
   const periodEnd = useMemo(() => new Date().toISOString(), []);
+
+  // Call minutes and SMS were two tiles reading "Not set (coming soon)" while
+  // /billing/usage has returned both all along, and the client already had a
+  // getUsage() nothing called.
+  const usageQ = useQuery({
+    queryKey: ["overview", "usage-30d", periodStart, periodEnd],
+    queryFn: () => getUsage(periodStart, periodEnd),
+    staleTime: 30_000,
+  });
 
   const callsQ = useQuery({
     queryKey: ["overview", "calls-30d", periodStart, periodEnd],
@@ -174,15 +186,17 @@ export default function OverviewPage() {
         />
         <StatCard
           label="Call Minutes"
-          value="Not set"
+          value={usageQ.isLoading ? "" : (usageQ.data?.metrics?.call_minute ?? 0)}
           icon={Clock}
-          hint="(coming soon)"
+          hint="last 30 days"
+          loading={usageQ.isLoading}
         />
         <StatCard
           label="SMS Sent"
-          value="Not set"
+          value={usageQ.isLoading ? "" : (usageQ.data?.metrics?.sms_sent ?? 0)}
           icon={MessageSquare}
-          hint="(coming soon)"
+          hint="last 30 days"
+          loading={usageQ.isLoading}
         />
       </div>
 
@@ -194,7 +208,9 @@ export default function OverviewPage() {
             <div className="card-head flex items-center justify-between gap-3">
               <div>
                 <h2 className="section-title">Active Sessions</h2>
-                <p className="text-[13px] text-ink-500 mt-0.5">10 most recent</p>
+                <p className="text-[13px] text-ink-500 mt-0.5">
+                  10 most recent. Ended sessions are on the sessions page.
+                </p>
               </div>
               <Link
                 href="/dashboard/sessions"

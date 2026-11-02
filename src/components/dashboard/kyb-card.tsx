@@ -384,6 +384,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
     contactName: "",
     contactPhone: "",
     website: "",
+    socialLinks: [],
   });
 
   // Seed the form from the server once, and again whenever the saved details
@@ -401,6 +402,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
       contactName: d.contactName ?? "",
       contactPhone: d.contactPhone ?? "",
       website: d.website ?? "",
+      socialLinks: d.socialLinks ?? [],
     });
   }, [state?.details]);
 
@@ -663,6 +665,56 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
                   onChange={(e) => setForm({ ...form, website: e.target.value })}
                   placeholder="https://example.com"
                 />
+                <p className="text-[12px] text-ink-500 mt-1">
+                  Must start with https://
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <Label>Social media profiles (optional)</Label>
+                <p className="text-[12px] text-ink-500 mb-2">
+                  A live page with real customers on it helps us verify you faster. Add as many as
+                  you have. Each must start with https://
+                </p>
+                <div className="space-y-2">
+                  {(form.socialLinks ?? []).map((link, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        className={inputClass}
+                        value={link}
+                        onChange={(e) => {
+                          const next = [...(form.socialLinks ?? [])];
+                          next[i] = e.target.value;
+                          setForm({ ...form, socialLinks: next });
+                        }}
+                        placeholder="https://instagram.com/yourbusiness"
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Remove profile link ${i + 1}`}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            socialLinks: (form.socialLinks ?? []).filter((_, j) => j !== i),
+                          })
+                        }
+                        className="shrink-0 px-3 rounded-xl border border-ink-200 text-[13px] text-ink-600 hover:bg-bone-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, socialLinks: [...(form.socialLinks ?? []), ""] })
+                  }
+                  disabled={(form.socialLinks ?? []).length >= 25}
+                  className="mt-2 text-[13px] text-ink-700 underline hover:no-underline disabled:opacity-40 disabled:no-underline"
+                >
+                  {(form.socialLinks ?? []).length === 0 ? "Add a profile link" : "Add another"}
+                </button>
               </div>
             </div>
 
@@ -675,6 +727,9 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
                     ...form,
                     city: form.city?.trim() ? form.city.trim() : null,
                     website: form.website?.trim() ? form.website.trim() : null,
+                    socialLinks: (form.socialLinks ?? [])
+                      .map((l) => l.trim())
+                      .filter((l) => l.length > 0),
                   })
                 }
               >

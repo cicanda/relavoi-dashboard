@@ -24,13 +24,27 @@ import { StatePill } from "@/components/state-pill";
 import { useToast } from "@/components/toast";
 import type { DirectionMode, Session, SessionState } from "@/lib/types";
 
+/**
+ * The filter values. A "group:" value asks the API for a set of states, a bare
+ * value for one exact state.
+ *
+ * Kay ended a session and watched it leave this list a minute later, which
+ * read as data loss. It was not: a session ended with no grace goes straight
+ * to EXPIRED, and the eye goes to the live ones. The groups make the choice
+ * explicit, and nothing is filtered out unless it was asked for.
+ */
+const GROUP_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: "All sessions", value: "group:all" },
+  { label: "Active now", value: "group:active" },
+  { label: "Ended", value: "group:ended" },
+];
+
 const STATE_OPTIONS: Array<{ label: string; value: string }> = [
-  { label: "All states", value: "" },
-  { label: "PENDING", value: "PENDING" },
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "GRACE_PERIOD", value: "GRACE_PERIOD" },
-  { label: "EXPIRED", value: "EXPIRED" },
-  { label: "FAILED", value: "FAILED" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "In grace period", value: "GRACE_PERIOD" },
+  { label: "Expired", value: "EXPIRED" },
+  { label: "Failed", value: "FAILED" },
 ];
 
 type Period = "today" | "7d" | "30d" | "all";
@@ -97,7 +111,7 @@ export default function SessionsListPage() {
   const canWrite = user?.role !== "VIEWER";
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [stateFilter, setStateFilter] = useState<string>("");
+  const [stateFilter, setStateFilter] = useState<string>("group:all");
   const [period, setPeriod] = useState<Period>("all");
   const [pages, setPages] = useState<Array<{ data: Session[]; after?: string | null }>>([]);
   const [activeAfter, setActiveAfter] = useState<string | undefined>(undefined);
@@ -112,7 +126,9 @@ export default function SessionsListPage() {
     queryKey: ["sessions", stateFilter || "all", activeAfter ?? "first"],
     queryFn: () =>
       listSessions({
-        state: stateFilter || undefined,
+        ...(stateFilter.startsWith("group:")
+          ? { status: stateFilter.slice(6) as "active" | "ended" | "all" }
+          : { state: stateFilter || undefined }),
         limit: 25,
         after: activeAfter,
       }),
@@ -187,11 +203,18 @@ export default function SessionsListPage() {
               onChange={(e) => setStateFilter(e.target.value)}
               className="appearance-none field w-auto pl-3.5 pr-9 text-[13px] cursor-pointer"
             >
-              {STATE_OPTIONS.map((o) => (
+              {GROUP_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
               ))}
+              <optgroup label="One state">
+                {STATE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <ChevronDown className="w-3 h-3 text-ink-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>

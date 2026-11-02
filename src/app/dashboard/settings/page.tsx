@@ -11,7 +11,9 @@ import {
   changePassword,
   getConfig,
   inviteUser,
+  listTeam,
   patchConfig,
+  type TeamMember,
 } from "@/lib/api";
 import type { ConsentPrompt, Role, Tenant, Tier } from "@/lib/types";
 
@@ -301,6 +303,34 @@ function TeamCard() {
   const { user } = useAuth();
   const [inviteOpen, setInviteOpen] = useState(false);
 
+  // The table used to render one hardcoded row, the signed-in user, with
+  // "Invited at: None" and the note "Team listing endpoint coming soon". An
+  // OWNER could invite somebody and never see them again.
+  const teamQ = useQuery({
+    queryKey: ["team"],
+    queryFn: listTeam,
+    staleTime: 30_000,
+  });
+
+  const rows: TeamMember[] =
+    teamQ.data ??
+    // Until the first response lands, show what we already know: the person
+    // reading the page. One row that is true beats an empty table.
+    (user
+      ? [
+          {
+            id: user.id,
+            email: user.email,
+            name: user.name ?? "",
+            role: user.role,
+            isActive: true,
+            lastLoginAt: null,
+            createdAt: new Date().toISOString(),
+            isYou: true,
+          },
+        ]
+      : []);
+
   return (
     <Card
       title="Team members"
@@ -320,40 +350,53 @@ function TeamCard() {
                 Role
               </th>
               <th className="th">
-                Invited at
+                Added
               </th>
               <th className="th">
-                Actions
+                Status
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="hover:bg-bone-50 transition-colors">
-              <td data-label="Name" className="td text-[13px] text-ink-700">
-                {user?.name ?? "Not set"}
-              </td>
-              <td data-label="Email" className="td text-[13px] text-ink-700">
-                {user?.email ?? "Not set"}
-              </td>
-              <td data-label="Role" className="td text-[13px] text-ink-700">
-                <RolePill role={user?.role ?? "VIEWER"} />
-              </td>
-              <td data-label="Invited at" className="td text-[13px] text-ink-700">None</td>
-              <td data-label="Actions" className="td text-[13px] text-ink-500">
-                You
-              </td>
-            </tr>
+            {rows.map((m) => (
+              <tr key={m.id} className="hover:bg-bone-50 transition-colors">
+                <td data-label="Name" className="td text-[13px] text-ink-700">
+                  {m.name || "Not set"}
+                  {m.isYou && <span className="text-ink-400"> (you)</span>}
+                </td>
+                <td data-label="Email" className="td text-[13px] text-ink-700">{m.email}</td>
+                <td data-label="Role" className="td text-[13px] text-ink-700">
+                  <RolePill role={m.role} />
+                </td>
+                <td data-label="Added" className="td text-[13px] text-ink-700">
+                  {new Date(m.createdAt).toLocaleDateString()}
+                </td>
+                <td data-label="Status" className="td text-[13px] text-ink-500">
+                  {!m.isActive
+                    ? "Deactivated"
+                    : m.lastLoginAt
+                      ? `Last signed in ${new Date(m.lastLoginAt).toLocaleDateString()}`
+                      : "Invited, not signed in yet"}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-      <div className="text-[11px] text-ink-500">Team listing endpoint coming soon.</div>
       <div className="flex justify-end">
         <button type="button" className={primaryBtn} onClick={() => setInviteOpen(true)}>
           Invite member
         </button>
       </div>
 
-      {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
+      {inviteOpen && (
+        <InviteModal
+          onClose={() => {
+            setInviteOpen(false);
+            void teamQ.refetch();
+          }}
+        />
+      )}
     </Card>
   );
 }
@@ -496,19 +539,39 @@ function SessionDefaultsCard({
     tenant.expiredCallBehavior ?? "DEAD_LINE",
   );
   const [supportPhone, setSupportPhone] = useState<string>(tenant.supportPhone ?? "");
-  const [maxDuration, setMaxDuration] = useState<number>(120);
+  const [expiredMessage, setExpiredMessage] = useState<string>(tenant.expiredMessage ?? "");
+  // Was a number input that saved nothing, under the words "Not yet persisted
+  // via /config (coming soon)". /config has both read it and accepted it as
+  // defaultSessionTtlMin for as long as the field has been on screen, and the
+  // session manager applies it to every session it creates.
+  const [maxDuration, setMaxDuration] = useState<number>(tenant.defaultSessionTtlMin ?? 120);
 
   useEffect(() => {
     setGrace(tenant.defaultGracePeriod ?? 15);
     setExpired(tenant.expiredCallBehavior ?? "DEAD_LINE");
     setSupportPhone(tenant.supportPhone ?? "");
-  }, [tenant.defaultGracePeriod, tenant.expiredCallBehavior, tenant.supportPhone]);
+    setExpiredMessage(tenant.expiredMessage ?? "");
+    setMaxDuration(tenant.defaultSessionTtlMin ?? 120);
+  }, [
+    tenant.defaultGracePeriod,
+    tenant.expiredCallBehavior,
+    tenant.supportPhone,
+    tenant.expiredMessage,
+    tenant.defaultSessionTtlMin,
+  ]);
+
+  const trimmedMessage = expiredMessage.trim();
+  // The API refuses this pairing with 422. Catching it here means the person
+  // is told before they press Save, rather than by an error afterwards.
+  const messageMissing = expired === "PLAY_MESSAGE" && trimmedMessage === "";
 
   function onSubmit() {
     const patch: Partial<Tenant> = {
       defaultGracePeriod: grace,
       expiredCallBehavior: expired,
       supportPhone: supportPhone.trim() || null,
+      expiredMessage: trimmedMessage || null,
+      defaultSessionTtlMin: maxDuration,
     };
     onSave(patch);
   }
@@ -518,7 +581,12 @@ function SessionDefaultsCard({
       title="Session defaults"
       description="Defaults applied when sessions don't override these values."
       footer={
-        <button type="button" className={primaryBtn} disabled={saving} onClick={onSubmit}>
+        <button
+          type="button"
+          className={primaryBtn}
+          disabled={saving || messageMissing}
+          onClick={onSubmit}
+        >
           {saving ? "Saving…" : "Save changes"}
         </button>
       }
@@ -545,10 +613,13 @@ function SessionDefaultsCard({
             }
             className={selectClass}
           >
-            <option value="DEAD_LINE">DEAD_LINE (hang up with message)</option>
-            <option value="REDIRECT_SUPPORT">REDIRECT_SUPPORT (forward to support)</option>
-            <option value="PLAY_MESSAGE">PLAY_MESSAGE (play custom audio)</option>
+            <option value="DEAD_LINE">Play the standard line and hang up</option>
+            <option value="REDIRECT_SUPPORT">Forward to your support line</option>
+            {/* Not "play custom audio": there is no audio upload, and offering
+                one would be offering something that does not exist. */}
+            <option value="PLAY_MESSAGE">Play a message you write, then hang up</option>
           </select>
+          <Hint>What a customer hears if they call the number after the session is over.</Hint>
         </div>
         <div>
           <Label>Support phone (E.164)</Label>
@@ -560,6 +631,44 @@ function SessionDefaultsCard({
             className={`${inputClass} font-mono`}
           />
         </div>
+        {expired === "PLAY_MESSAGE" && (
+          <div className="sm:col-span-2">
+            <Label>Your message</Label>
+            <textarea
+              value={expiredMessage}
+              onChange={(e) => setExpiredMessage(e.target.value.slice(0, 300))}
+              rows={3}
+              placeholder="This order is complete. Please place a new order in the app to call again."
+              className={`${inputClass} h-auto py-2.5 leading-relaxed`}
+            />
+            <div className="flex items-center justify-between gap-3 mt-1">
+              <Hint>
+                Plain text, read aloud by a voice. No angle brackets. Keep it short: most people
+                hang up after a few seconds.
+              </Hint>
+              <span
+                className={`text-[12px] tabular-nums shrink-0 ${
+                  expiredMessage.length >= 300 ? "text-red-600" : "text-ink-400"
+                }`}
+              >
+                {expiredMessage.length}/300
+              </span>
+            </div>
+
+            {messageMissing ? (
+              <p className="mt-2 text-[13px] text-red-600">
+                Write the message before saving. Without one, callers would hear the standard line
+                instead and this setting would do nothing.
+              </p>
+            ) : (
+              <div className="mt-2 rounded-xl border border-ink-200 bg-bone-50 px-3.5 py-3">
+                <div className="text-[12px] text-ink-500 mb-1">Your caller will hear</div>
+                <p className="text-[14px] text-ink-900 italic">{trimmedMessage}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div>
           <Label>Max session duration (min)</Label>
           <input
@@ -570,7 +679,9 @@ function SessionDefaultsCard({
             onChange={(e) => setMaxDuration(Number(e.target.value))}
             className={inputClass}
           />
-          <Hint>Hard timeout. Not yet persisted via /config (coming soon).</Hint>
+          <Hint>
+            Hard timeout. A session ends at this point whether or not it was ended in your app.
+          </Hint>
         </div>
       </div>
     </Card>
@@ -676,14 +787,14 @@ function PushCard({
     push.push_title_template ?? "Incoming call from {tenant_name}",
   );
   const [body, setBody] = useState<string>(
-    push.push_body_template ?? "{agent_name} is calling about order {order_id}",
+    push.push_body_template ?? "Your {tenant_name} order {order_id} is calling.",
   );
 
   useEffect(() => {
     const p = readPush(tenant);
     setEnabled(p.push_enabled ?? true);
     setTitle(p.push_title_template ?? "Incoming call from {tenant_name}");
-    setBody(p.push_body_template ?? "{agent_name} is calling about order {order_id}");
+    setBody(p.push_body_template ?? "Your {tenant_name} order {order_id} is calling.");
   }, [tenant]);
 
   function onSubmit() {
@@ -731,9 +842,10 @@ function PushCard({
         />
       </div>
       <Hint>
-        Available variables: <code className="font-mono">{"{tenant_name}"}</code>,{" "}
-        <code className="font-mono">{"{agent_name}"}</code>,{" "}
-        <code className="font-mono">{"{order_id}"}</code>
+        Available variables: <code className="font-mono">{"{tenant_name}"}</code> and{" "}
+        <code className="font-mono">{"{order_id}"}</code>, which is the reference your app
+        attached to the session. A variable we cannot fill is left blank, so do not invent
+        new ones.
       </Hint>
     </Card>
   );

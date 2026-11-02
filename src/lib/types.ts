@@ -18,6 +18,8 @@ export interface Tenant {
   webhookUrl?: string | null;
   defaultGracePeriod?: number;
   expiredCallBehavior?: "DEAD_LINE" | "REDIRECT_SUPPORT" | "PLAY_MESSAGE";
+  /** Spoken to callers of a closed session when the behaviour is PLAY_MESSAGE. */
+  expiredMessage?: string | null;
   supportPhone?: string | null;
   recordingEnabled?: boolean;
   recordingConsentMode?: ConsentPrompt;

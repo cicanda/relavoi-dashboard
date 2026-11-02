@@ -25,13 +25,26 @@ import { useToast } from "@/components/toast";
 import type { WebhookDeliveryLog } from "@/lib/types";
 
 // ─── Event subscription metadata ─────────────────────────────────────────────
+/**
+ * The events the platform actually publishes and delivers.
+ *
+ * Checked against the event bus rather than written from the architecture
+ * notes. `session.activated` was offered here and is published by nothing (the
+ * consumer for it was removed as dead), while `call.missed`, `call.failed`,
+ * `session.ended` and `session.target_swapped` fire and were not offered at
+ * all. A tenant wiring a dispatch retry needed `call.missed` and could not
+ * subscribe to it.
+ */
 const EVENT_TYPES: Array<{ id: string; description: string }> = [
   { id: "session.created", description: "A new masking session was created" },
-  { id: "session.activated", description: "Session is now routing calls" },
-  { id: "session.expired", description: "Session has terminated" },
+  { id: "session.ended", description: "The session was ended, and may still be in its grace period" },
+  { id: "session.expired", description: "The session is over and the number is released" },
+  { id: "session.target_swapped", description: "The customer on the session was changed" },
   { id: "call.incoming", description: "A call has arrived on a proxy number" },
-  { id: "call.answered", description: "The callee picked up" },
-  { id: "call.ended", description: "The call concluded" },
+  { id: "call.answered", description: "The person called picked up" },
+  { id: "call.ended", description: "The call finished after being answered" },
+  { id: "call.missed", description: "The call rang out and nobody answered" },
+  { id: "call.failed", description: "The call could not be placed or was refused" },
   { id: "sms.received", description: "An SMS arrived on a proxy number" },
   { id: "sms.sent", description: "Your outbound SMS was sent" },
 ];
@@ -207,6 +220,16 @@ export default function WebhooksPage() {
 
   const [urlInput, setUrlInput] = useState("");
   const [urlInitialized, setUrlInitialized] = useState(false);
+  /**
+   * Which events go to the endpoint.
+   *
+   * This was a row of ticked, disabled boxes under the line "Per-event
+   * selection coming soon", and the page always registered every event. The
+   * API has stored the selection per tenant and filtered deliveries against
+   * it since tenant webhooks shipped, so the only thing missing was this.
+   */
+  const [events, setEvents] = useState<string[]>(ALL_EVENT_IDS);
+  const [eventsInitialized, setEventsInitialized] = useState(false);
   const [regenOpen, setRegenOpen] = useState(false);
   const [verifyTab, setVerifyTab] = useState<VerifyTab>("node");
 
@@ -228,8 +251,18 @@ export default function WebhooksPage() {
     }
   }, [configQuery.data, urlInitialized]);
 
+  useEffect(() => {
+    if (eventsInitialized || !configQuery.data) return;
+    const saved = configQuery.data.events ?? [];
+    // No saved rows means every event, which is what the API does with an
+    // empty set, so an endpoint registered before this control existed keeps
+    // receiving exactly what it receives today.
+    setEvents(saved.length > 0 ? saved : ALL_EVENT_IDS);
+    setEventsInitialized(true);
+  }, [configQuery.data, eventsInitialized]);
+
   const registerMutation = useMutation({
-    mutationFn: (url: string) => registerWebhook(url, ALL_EVENT_IDS),
+    mutationFn: (url: string) => registerWebhook(url, events),
     onSuccess: () => {
       toast.success("Webhook saved");
       queryClient.invalidateQueries({ queryKey: ["webhook-config"] });
@@ -240,8 +273,10 @@ export default function WebhooksPage() {
   });
 
   const regenMutation = useMutation({
-    // Regenerating the secret re-registers with the same URL; backend rotates secret.
-    mutationFn: (url: string) => registerWebhook(url, ALL_EVENT_IDS),
+    // Regenerating the secret re-registers with the same URL; backend rotates
+    // secret. It must carry the current selection, or rotating a secret would
+    // silently re-subscribe the endpoint to everything.
+    mutationFn: (url: string) => registerWebhook(url, events),
     onSuccess: () => {
       toast.success("Signing secret regenerated");
       queryClient.invalidateQueries({ queryKey: ["webhook-config"] });
@@ -370,13 +405,22 @@ export default function WebhooksPage() {
           {EVENT_TYPES.map((evt) => (
             <label
               key={evt.id}
-              className="flex items-start gap-3 p-3.5 border border-ink-200 rounded-xl bg-bone-50 opacity-90"
+              className={`flex items-start gap-3 p-3.5 border rounded-xl cursor-pointer transition-colors ${
+                events.includes(evt.id)
+                  ? "border-ink-300 bg-bone-50"
+                  : "border-ink-200 bg-white hover:bg-bone-50"
+              }`}
             >
               <input
                 type="checkbox"
-                checked
-                disabled
-                readOnly
+                checked={events.includes(evt.id)}
+                onChange={(e) =>
+                  setEvents((prev) =>
+                    e.target.checked
+                      ? [...prev, evt.id]
+                      : prev.filter((x) => x !== evt.id),
+                  )
+                }
                 className="mt-0.5 accent-signal-600"
               />
               <div className="min-w-0">
@@ -388,9 +432,23 @@ export default function WebhooksPage() {
             </label>
           ))}
         </div>
-        <p className="text-[13px] italic text-ink-500 mt-4">
-          Per-event selection coming soon. All events are currently delivered.
-        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[13px] text-ink-500">
+            {events.length === 0
+              ? "Choose at least one event. An endpoint subscribed to nothing would never be called."
+              : `${events.length} of ${ALL_EVENT_IDS.length} events will be delivered.`}
+          </p>
+          <button
+            type="button"
+            disabled={
+              events.length === 0 || !urlInput.trim() || registerMutation.isPending
+            }
+            onClick={() => registerMutation.mutate(urlInput.trim())}
+            className="btn btn-secondary btn-sm"
+          >
+            {registerMutation.isPending ? "Saving…" : "Save events"}
+          </button>
+        </div>
       </section>
 
       {/* Card 3 — Delivery Logs */}
