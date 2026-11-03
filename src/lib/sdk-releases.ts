@@ -22,10 +22,10 @@
  *            Note that a non-Android Gradle project cannot resolve this at
  *            all: the aar needs variant-aware resolution, and without it the
  *            BOM-managed firebase version comes through empty.
- *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.2,
- *            revision c7d2ea9. 0.3.2 is the first usable release of the 0.3
- *            line: create() and list() recursed until the process died in
- *            0.3.0 and 0.3.1, so do not move this back.
+ *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.3.
+ *            Do not move this below 0.3.2: create() and list() recursed until
+ *            the process died in 0.3.0 and 0.3.1, so those two releases crash
+ *            an app on its first session.
  *   Flutter  git ref v0.3.1 resolved to 810d1d7, version 0.3.1, 68
  *            dependencies.
  *
@@ -58,9 +58,9 @@ export const SDK_RELEASES = {
     repo: "relavoi-android-sdk",
   },
   ios: {
-    // SPM strips the leading v, so the dependency reads 0.3.2 and the tag is v0.3.2.
-    tag: "v0.3.2",
-    version: "0.3.2",
+    // SPM strips the leading v, so the dependency reads 0.3.3 and the tag is v0.3.3.
+    tag: "v0.3.3",
+    version: "0.3.3",
     repo: "relavoi-ios-sdk",
   },
   flutter: {
