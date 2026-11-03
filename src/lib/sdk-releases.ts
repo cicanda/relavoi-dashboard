@@ -26,7 +26,7 @@
  *            Do not move this below 0.3.2: create() and list() recursed until
  *            the process died in 0.3.0 and 0.3.1, so those two releases crash
  *            an app on its first session.
- *   Flutter  git ref v0.3.1 resolved to 810d1d7, version 0.3.1, 68
+ *   Flutter  git ref v0.3.2 resolved to 4813d36, version 0.3.2, 68
  *            dependencies.
  *
  * JitPack builds a tag the first time somebody asks for it, so a freshly cut
@@ -64,8 +64,8 @@ export const SDK_RELEASES = {
     repo: "relavoi-ios-sdk",
   },
   flutter: {
-    tag: "v0.3.1",
-    version: "0.3.1",
+    tag: "v0.3.2",
+    version: "0.3.2",
     repo: "relavoi-flutter-sdk",
   },
 } satisfies Record<string, SdkRelease>;
