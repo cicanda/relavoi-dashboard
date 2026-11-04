@@ -12,22 +12,28 @@
  * `npm run check:sdk-versions` fails if these stop matching the tags on the
  * public repositories.
  *
- * Verified on 2026-11-02 by resolving each one in a clean scratch project:
+ * Verified on 2026-11-04 by resolving each one against the public tag:
  *
- *   Android  com.github.cicanda:relavoi-android-sdk:v0.3.1 from JitPack, in a
- *            real Android project: 269 KB aar, 74 artifacts on the release
- *            runtime classpath. `google()` is required in the repository list,
- *            because the published POM imports firebase-bom and depends on
+ *   Android  com.github.cicanda:relavoi-android-sdk:v0.4.0 from JitPack:
+ *            build status ok at commit 608846a, pom and a 277 KB aar both
+ *            served. `google()` is required in the repository list, because
+ *            the published POM imports firebase-bom and depends on
  *            firebase-messaging-ktx, which only Google's repository serves.
  *            Note that a non-Android Gradle project cannot resolve this at
  *            all: the aar needs variant-aware resolution, and without it the
  *            BOM-managed firebase version comes through empty.
- *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.3.3.
- *            Do not move this below 0.3.2: create() and list() recursed until
- *            the process died in 0.3.0 and 0.3.1, so those two releases crash
- *            an app on its first session.
- *   Flutter  git ref v0.3.2 resolved to 4813d36, version 0.3.2, 68
- *            dependencies.
+ *   iOS      https://github.com/cicanda/relavoi-ios-sdk resolved at 0.4.0 in
+ *            a clean SwiftPM package, pinned to de81ac1. Do not move this
+ *            below 0.3.2: create() and list() recursed until the process died
+ *            in 0.3.0 and 0.3.1, so those two releases crash an app on its
+ *            first session.
+ *   Flutter  git ref v0.3.3 resolved to 94a2924, 68 dependencies.
+ *
+ * 0.4.0 of the two native SDKs is a source break and not a patch: both add a
+ * case to a type that consumers match exhaustively, a Swift enum and a Kotlin
+ * sealed class, for the new numberQuotaReached error. The Flutter SDK made the
+ * same change as 0.3.3, because Dart has no exhaustiveness over a plain class
+ * hierarchy. See each repository's CHANGELOG.
  *
  * JitPack builds a tag the first time somebody asks for it, so a freshly cut
  * tag is not instantly resolvable and the first request can time out while the
@@ -53,19 +59,19 @@ export interface SdkRelease {
 
 export const SDK_RELEASES = {
   android: {
-    tag: "v0.3.1",
-    version: "0.3.1",
+    tag: "v0.4.0",
+    version: "0.4.0",
     repo: "relavoi-android-sdk",
   },
   ios: {
-    // SPM strips the leading v, so the dependency reads 0.3.3 and the tag is v0.3.3.
-    tag: "v0.3.3",
-    version: "0.3.3",
+    // SPM strips the leading v, so the dependency reads 0.4.0 and the tag is v0.4.0.
+    tag: "v0.4.0",
+    version: "0.4.0",
     repo: "relavoi-ios-sdk",
   },
   flutter: {
-    tag: "v0.3.2",
-    version: "0.3.2",
+    tag: "v0.3.3",
+    version: "0.3.3",
     repo: "relavoi-flutter-sdk",
   },
 } satisfies Record<string, SdkRelease>;
