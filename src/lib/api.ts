@@ -10,7 +10,8 @@ import type {
   Session,
   CallRecord,
   SmsRecord,
-  PoolStatus,
+  NumberQuota,
+  NumberRequest,
   UsageSummary,
   PricingTierRow,
   PaginatedResponse,
@@ -97,6 +98,8 @@ const PLAIN_MESSAGES: Record<string, string> = {
     "You have as many sessions open as your plan allows. End one you have finished with, or move to a bigger plan.",
   "pool-exhausted":
     "No Relavoi number is free at the moment. End a session you have finished with, or try again shortly.",
+  "number-quota-reached":
+    "Every number your workspace holds is already in a session with one of these two people, and you are at your limit. End a session you have finished with, or ask for another number on the Numbers page.",
   "target-conflict":
     "That customer is already on another open session using this number. End that one first.",
   "invalid-target": "That number cannot be used here.",
@@ -326,10 +329,36 @@ export async function listCalls(params: {
 }
 
 // ─── Numbers ──────────────────────────────────────────────────────────────────
-export async function getPool() {
-  // Backend shape: { pools: PoolStatus[] }. Tolerate a bare array too.
-  const { data } = await api.get<{ pools: PoolStatus[] } | PoolStatus[]>("/numbers/pool");
-  return Array.isArray(data) ? data : (data.pools ?? []);
+/**
+ * This workspace's own numbers and its own limit.
+ *
+ * It used to return the shared pool's per-region totals, which described our
+ * capacity and other workspaces' activity rather than anything this workspace
+ * could act on.
+ */
+export async function getNumberQuota() {
+  const { data } = await api.get<NumberQuota>("/numbers/pool");
+  return data;
+}
+
+export async function listNumberRequests() {
+  const { data } = await api.get<{ requests: NumberRequest[] }>("/numbers/requests");
+  return data.requests ?? [];
+}
+
+/** `requestedTotal` is the total wanted at once, not how many more. */
+export async function requestMoreNumbers(args: {
+  region: string;
+  requestedTotal: number;
+  note?: string;
+}) {
+  const { data } = await api.post<NumberRequest>("/numbers/provision", args);
+  return data;
+}
+
+export async function withdrawNumberRequest(id: string) {
+  const { data } = await api.post<NumberRequest>(`/numbers/requests/${id}/withdraw`);
+  return data;
 }
 
 // ─── Billing ──────────────────────────────────────────────────────────────────

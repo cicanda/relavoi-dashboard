@@ -12,6 +12,11 @@ const MAP: Record<string, { bg: string; text: string; dot: string; label?: strin
   ANSWERED:      { bg: "bg-signal-500/15", text: "text-signal-700", dot: "bg-signal-500" },
   COMPLETED:     { bg: "bg-ink-200",      text: "text-ink-700",    dot: "bg-ink-500" },
   MISSED:        { bg: "bg-amber-500/15", text: "text-amber-700",  dot: "bg-amber-500" },
+  // Number request outcomes, for the Numbers page. PENDING above is shared
+  // with sessions and reads the same way here.
+  APPROVED:      { bg: "bg-signal-500/15", text: "text-signal-700", dot: "bg-signal-500" },
+  DECLINED:      { bg: "bg-red-500/15",   text: "text-red-700",    dot: "bg-red-500" },
+  WITHDRAWN:     { bg: "bg-ink-200",      text: "text-ink-600",    dot: "bg-ink-400" },
 };
 
 export function StatePill({

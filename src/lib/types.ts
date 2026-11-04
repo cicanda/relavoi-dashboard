@@ -101,14 +101,35 @@ export interface SmsRecord {
   deliveredAt?: string | null;
 }
 
-export interface PoolStatus {
+/**
+ * What this workspace holds, against what it may hold.
+ *
+ * This replaced PoolStatus, which was the shared pool: total, available, in
+ * use, per region. Those figures were ours and other workspaces', not this
+ * one's. "Available: 40" never meant 40 were available to them, and the
+ * number moved with other customers' traffic.
+ */
+export interface NumberQuota {
+  held: number;
+  limit: number;
+  numbers: string[];
+  /** Why the limit is the size it is, written by the API so it cannot drift. */
+  explanation: string;
+  pendingRequest: NumberRequest | null;
+}
+
+export interface NumberRequest {
+  id: string;
+  status: "PENDING" | "APPROVED" | "DECLINED" | "WITHDRAWN";
+  /** A total, not an increment. */
+  requestedTotal: number;
+  quotaAtRequest: number;
   region: string;
-  provider: string;
-  total: number;
-  available: number;
-  inUse: number;
-  cooldown: number;
-  quarantined?: number;
+  note: string | null;
+  createdAt: string;
+  grantedTotal: number | null;
+  decidedAt: string | null;
+  decisionNote: string | null;
 }
 
 export interface BillingMetricRow {
