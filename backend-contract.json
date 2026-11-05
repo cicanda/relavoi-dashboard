@@ -1,0 +1,26 @@
+{
+  "_why": [
+    "The oldest relavoi-backend this dashboard can run against, as the integer",
+    "GET /v1/health reports as contractVersion. scripts/vercel-ignore-build.mjs",
+    "is wired in as this project's Vercel Ignored Build Step and skips a",
+    "production build while the live backend is behind this number, so the",
+    "dashboard can never go live ahead of the API it calls.",
+    "",
+    "Raise it in the same commit as the code that needs the newer backend, and",
+    "only to a number relavoi-backend has already shipped: the backend's own",
+    "test suite fails if this asks for a version that does not exist, because a",
+    "build that waits for a version nobody will ever serve waits for ever and",
+    "Vercel records it as CANCELED rather than failed.",
+    "",
+    "Lowering it is not a rollback. A build already skipped stays skipped until",
+    "something triggers it again: a push, or the backend deploy script poking",
+    "this project's deploy hook."
+  ],
+  "minimumBackendContractVersion": 1,
+  "requires": [
+    "GET /v1/reference, for the industry and country dropdowns in Settings",
+    "industry and country on GET and PATCH /v1/config",
+    "the 12-character password floor on PATCH /v1/auth/dashboard/change-password"
+  ],
+  "healthUrl": "https://api.relavoi.com/v1/health"
+}
