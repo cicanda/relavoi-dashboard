@@ -10,6 +10,18 @@ export type ConsentPrompt = "DEFAULT" | "CUSTOM" | "NONE";
 export type Tier = "STARTER" | "GROWTH" | "SCALE" | "ENTERPRISE";
 export type Role = "OWNER" | "ADMIN" | "DEVELOPER" | "VIEWER";
 
+/**
+ * The lists behind the industry and country dropdowns, served by
+ * `GET /v1/reference`. They are fetched rather than held here on purpose: the
+ * API validates against the same constant that answers that call, so a copy in
+ * the dashboard would be a copy that can go stale and start offering a value
+ * the server refuses.
+ */
+export interface ReferenceLists {
+  industries: Array<{ code: string; label: string }>;
+  countries: Array<{ code: string; name: string }>;
+}
+
 export interface Tenant {
   id: string;
   name: string;

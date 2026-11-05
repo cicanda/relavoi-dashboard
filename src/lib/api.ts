@@ -12,6 +12,7 @@ import type {
   SmsRecord,
   NumberQuota,
   NumberRequest,
+  ReferenceLists,
   UsageSummary,
   PricingTierRow,
   PaginatedResponse,
@@ -336,6 +337,16 @@ export async function listCalls(params: {
  * capacity and other workspaces' activity rather than anything this workspace
  * could act on.
  */
+/**
+ * The industry and country lists. Unauthenticated and cacheable for a day, so
+ * this is safe to call before a session exists and cheap to call on every
+ * mount of the Settings page.
+ */
+export async function getReferenceLists() {
+  const { data } = await api.get<ReferenceLists>("/reference");
+  return data;
+}
+
 export async function getNumberQuota() {
   const { data } = await api.get<NumberQuota>("/numbers/pool");
   return data;

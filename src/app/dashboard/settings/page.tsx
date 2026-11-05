@@ -10,6 +10,7 @@ import { BusinessVerificationCard } from "@/components/dashboard/kyb-card";
 import {
   changePassword,
   getConfig,
+  getReferenceLists,
   inviteUser,
   listTeam,
   patchConfig,
@@ -859,6 +860,39 @@ function WorkspaceSetupCard({
 
   const [industry, setIndustry] = useState(initial.industry);
   const [country, setCountry] = useState(initial.country);
+
+  /**
+   * The two lists come from the API, not from a constant in here. The server
+   * validates against the same list it serves, so a local copy would
+   * eventually offer a value the server refuses. Unauthenticated and cached
+   * for a day at the edge of the API, so this is a cheap call.
+   */
+  const reference = useQuery({
+    queryKey: ["reference"],
+    queryFn: getReferenceLists,
+    staleTime: 60 * 60 * 1000,
+  });
+
+  /**
+   * A value stored before the list existed is kept as an option of its own
+   * rather than silently dropped, which would show the field as empty and let
+   * a save blank it.
+   */
+  const industryOptions = (() => {
+    const list = reference.data?.industries ?? [];
+    if (industry && !list.some((i) => i.code === industry)) {
+      return [...list, { code: industry, label: industry }];
+    }
+    return list;
+  })();
+
+  const countryOptions = (() => {
+    const list = reference.data?.countries ?? [];
+    if (country && !list.some((c) => c.code === country)) {
+      return [...list, { code: country, name: country }];
+    }
+    return list;
+  })();
   const [slug, setSlug] = useState(initial.workspaceSlug);
   const [poolSize, setPoolSize] = useState<string>(
     initial.requestedPoolSize != null ? String(initial.requestedPoolSize) : "",
@@ -872,8 +906,8 @@ function WorkspaceSetupCard({
 
   function onSubmit() {
     const patch: Partial<Tenant> = {
-      industry: industry.trim() || null,
-      country: country.trim().toUpperCase() || null,
+      industry: industry || null,
+      country: country || null,
       workspaceSlug: slug.trim() || null,
       requestedPoolSize: poolSize.trim() ? Number(poolSize) : null,
     };
@@ -901,23 +935,36 @@ function WorkspaceSetupCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
         <div>
           <Label>Industry</Label>
-          <input
-            className="field w-full"
+          <select
+            className={selectClass}
             value={industry}
-            placeholder="Delivery"
             onChange={(e) => setIndustry(e.target.value)}
-          />
+            disabled={reference.isLoading}
+          >
+            <option value="">Not set</option>
+            {industryOptions.map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <Label>Country</Label>
-          <input
-            className="field w-full font-mono uppercase"
+          <select
+            className={selectClass}
             value={country}
-            maxLength={2}
-            placeholder="NG"
             onChange={(e) => setCountry(e.target.value)}
-          />
-          <Hint>Two-letter ISO code.</Hint>
+            disabled={reference.isLoading}
+          >
+            <option value="">Not set</option>
+            {countryOptions.map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+          <Hint>Where the business is registered, not where your riders are.</Hint>
         </div>
         <div>
           <Label>Workspace slug</Label>
