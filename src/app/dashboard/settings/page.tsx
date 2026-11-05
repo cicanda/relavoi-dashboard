@@ -1014,10 +1014,18 @@ function WorkspaceSetupCard({
 
 // ─── Change password ────────────────────────────────────────────────────────
 
+/**
+ * The floor the API enforces on every form that sets a password: signup, the
+ * reset that follows a reset link, and this one. Checked here too, so a
+ * password that cannot work costs a keystroke rather than a round trip.
+ */
+const MIN_PASSWORD = 12;
+
 function ChangePasswordCard() {
   const toast = useToast();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   const mut = useMutation({
     mutationFn: (vars: { current: string; next: string }) =>
@@ -1026,6 +1034,7 @@ function ChangePasswordCard() {
       toast.success("Password updated");
       setCurrent("");
       setNext("");
+      setConfirm("");
     },
     onError: (err) => {
       toast.error("Update failed", extractErrorMessage(err, "Could not change password."));
@@ -1033,16 +1042,27 @@ function ChangePasswordCard() {
   });
 
   function onSubmit() {
-    if (!current || !next) {
-      toast.error("Missing fields", "Enter both your current and new password.");
+    if (!current || !next || !confirm) {
+      toast.error("Missing fields", "Fill in all three fields.");
       return;
     }
-    if (next.length < 8) {
-      toast.error("Password too short", "New password must be at least 8 characters.");
+    if (next.length < MIN_PASSWORD) {
+      toast.error(
+        "Password too short",
+        `Use at least ${MIN_PASSWORD} characters.`,
+      );
+      return;
+    }
+    // Same order as the reset form: length first, then the match, so a short
+    // password is not reported as a mismatch.
+    if (next !== confirm) {
+      toast.error("Passwords do not match", "The two new passwords are different.");
       return;
     }
     mut.mutate({ current, next });
   }
+
+  const mismatch = confirm.length > 0 && next !== confirm;
 
   return (
     <Card
@@ -1079,6 +1099,19 @@ function ChangePasswordCard() {
             onChange={(e) => setNext(e.target.value)}
             className={inputClass}
           />
+          <Hint>At least {MIN_PASSWORD} characters.</Hint>
+        </div>
+        <div>
+          <Label>Confirm new password</Label>
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            aria-invalid={mismatch}
+            className={inputClass}
+          />
+          {mismatch && <Hint>The two new passwords are different.</Hint>}
         </div>
       </div>
     </Card>
