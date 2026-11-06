@@ -52,12 +52,12 @@ function asNumber(v: unknown): number {
 }
 
 const CALL_COLORS = {
-  answered: "#5BC97A",
-  missed: "#F59E0B",
-  failed: "#EF4444",
+  answered: "#35A866",
+  missed: "#B9651C",
+  failed: "#8E1E17",
 };
 
-const AXIS_TICK = { fontSize: 11, fill: "#64748B", fontFamily: "var(--font-mono)" };
+const AXIS_TICK = { fontSize: 11, fill: "#5B6B7A", fontFamily: "var(--font-mono)" };
 
 function ChartTooltip({
   active,
@@ -81,7 +81,7 @@ function ChartTooltip({
         <div key={i} className="flex items-center gap-2">
           <span
             className="w-2 h-2 rounded-full inline-block"
-            style={{ background: p.color ?? "#5BC97A" }}
+            style={{ background: p.color ?? "#0B7A6B" }}
           />
           <span className="text-ink-500 capitalize">{p.name ?? p.dataKey}</span>
           <span className="ml-auto font-medium text-ink-900 tabular-nums">
@@ -247,8 +247,8 @@ export default function AnalyticsPage() {
     }
     if (aToB === 0 && bToA === 0) return [];
     return [
-      { name: "A → B", value: aToB, color: "#5BC97A" },
-      { name: "B → A", value: bToA, color: "#3B82F6" },
+      { name: "A → B", value: aToB, color: "#0B7A6B" },
+      { name: "B → A", value: bToA, color: "#1F5FA6" },
     ];
   }, [callsList]);
 
@@ -322,30 +322,30 @@ export default function AnalyticsPage() {
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={callVolumeData} margin={{ top: 5, right: 12, bottom: 0, left: 0 }}>
-              <CartesianGrid stroke="#E8E4DD" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="#ECEDEE" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="ts"
                 tick={AXIS_TICK}
                 tickFormatter={xLabelFormatter}
-                axisLine={{ stroke: "#E8E4DD" }}
+                axisLine={{ stroke: "#ECEDEE" }}
                 tickLine={false}
                 minTickGap={24}
               />
               <YAxis
                 tick={AXIS_TICK}
-                axisLine={{ stroke: "#E8E4DD" }}
+                axisLine={{ stroke: "#ECEDEE" }}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
                 content={<ChartTooltip labelFormatter={xLabelFormatter} />}
-                cursor={{ stroke: "#E8E4DD", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#ECEDEE", strokeDasharray: "3 3" }}
               />
               <Legend
                 wrapperStyle={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono)",
-                  color: "#64748B",
+                  color: "#5B6B7A",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
@@ -411,7 +411,7 @@ export default function AnalyticsPage() {
                 wrapperStyle={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono)",
-                  color: "#64748B",
+                  color: "#5B6B7A",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
@@ -433,24 +433,24 @@ export default function AnalyticsPage() {
               data={sessionSeriesData}
               margin={{ top: 5, right: 12, bottom: 0, left: 0 }}
             >
-              <CartesianGrid stroke="#E8E4DD" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="#ECEDEE" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="ts"
                 tick={AXIS_TICK}
                 tickFormatter={xLabelFormatter}
-                axisLine={{ stroke: "#E8E4DD" }}
+                axisLine={{ stroke: "#ECEDEE" }}
                 tickLine={false}
                 minTickGap={24}
               />
               <YAxis
                 tick={AXIS_TICK}
-                axisLine={{ stroke: "#E8E4DD" }}
+                axisLine={{ stroke: "#ECEDEE" }}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
                 content={<ChartTooltip labelFormatter={xLabelFormatter} />}
-                cursor={{ stroke: "#E8E4DD", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "#ECEDEE", strokeDasharray: "3 3" }}
               />
               <Line
                 type="monotone"

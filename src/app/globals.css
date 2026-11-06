@@ -5,33 +5,116 @@
    @theme block (bg-ink-900, rounded-card, shadow-card…); the component classes
    further down read the same variables, so a token change lands everywhere. */
 @theme inline {
-  /* Ink scale — cool near-black for text, warm hairlines for structure */
-  --color-ink-900: #0B1220;
-  --color-ink-800: #1A2332;
-  --color-ink-700: #1E293B;
-  --color-ink-600: #334155;
-  --color-ink-500: #64748B;
-  --color-ink-400: #94A3B8;
-  --color-ink-300: #D6D1C8;
-  --color-ink-200: #E8E4DD;
+  /* ─── Relavoi brand tokens ───────────────────────────────────────────────
+     Generated from the six colours in the brand guidelines; nothing here is
+     invented. Names are unchanged so every existing utility class keeps
+     working: this is a token swap, not a rename.
 
-  /* Surfaces — warm canvas, lighter tray, white cards */
-  --color-bone-50: #F8F6F2;
-  --color-bone-100: #F2EFE9;
-  --color-bone-200: #EAE6DE;
+       Ink         #0E1B2C  dark grounds and primary text
+       Relay Teal  #0B7A6B  the brand: buttons, links, accents
+       Pulse Teal  #2CC5AE  dark grounds ONLY, never text on white (2.16:1)
+       Proxy Amber #F5A524  the proxy moment only, never a warning
+       Mist        #EEF3F2  light grounds
+       Slate       #5B6B7A  secondary text
+
+     Dark steps mix Ink toward Slate so they keep the brand's blue cast;
+     light steps mix toward white in linear light. Marks are lightened in
+     HSL, because a linear mix to white pulls the chroma out. */
+  --color-ink-950: #091321;
+  --color-ink-900: #0E1B2C;
+  --color-ink-800: #25303E;
+  --color-ink-700: #313D4A;
+  --color-ink-600: #3E4B59;
+  --color-ink-500: #5B6B7A;
+  --color-ink-400: #88919A;
+  --color-ink-300: #D4D6D9;
+  --color-ink-200: #ECEDEE;
+  --color-ink-100: #EEF3F2;
+  --color-ink-50:  #F8FAF9;
   --color-paper: #FFFFFF;
 
-  /* Brand — signal green (status, focus), plus the logo's teal, navy and amber */
-  --color-signal-500: #5BC97A;
-  --color-signal-600: #4AAF68;
-  --color-signal-700: #3A9456;
+  /* Mist replaces the warm "bone" canvas. */
+  --color-bone-50:  #F8FAF9;
+  --color-bone-100: #EEF3F2;
+  --color-bone-200: #ECEDEE;
+
+  /* The brand. `signal` keeps its name because the components read it. */
+  --color-signal-500: #0B7A6B;
+  --color-signal-600: #0A7466;
+  --color-signal-700: #096E60;
+  --color-signal-800: #076458;
+  --color-signal-100: #EFF2F1;
+  --color-signal-200: #DDE4E2;
+  --color-relay-500: #0B7A6B;
+  --color-relay-600: #0A7466;
+  --color-relay-700: #096E60;
+  --color-relay-100: #EFF2F1;
+  --color-pulse-500: #2CC5AE;
+  --color-pulse-600: #28B8A3;
   --color-brand-teal: #0B7A6B;
   --color-brand-navy: #0E1B2C;
+  /* Proxy Amber is the proxy moment ONLY: the proxy dot or a proxy-number
+     badge. It is NOT a warning colour, and every amber utility in these apps
+     was a warning (cooldown, at-limit, pool utilisation, KYB pending), so
+     those names now carry the warning scale and Proxy Amber lives under its
+     own name where it cannot be reached by accident. */
+  --color-proxy-500: #F5A524;
+  --color-proxy-800: #976412;
+  --color-proxy-100: #FEF5EF;
   --color-brand-amber: #F5A524;
+  --color-amber-500: #9A4F11;
+  --color-amber-700: #8D480F;
+  --color-amber-800: #8D480F;
+  --color-amber-900: #8D480F;
+  --color-amber-100: #F4F0EF;
 
-  /* Typography (faces wired in app/layout.tsx via next/font) */
-  --font-sans: var(--font-albert-sans);
-  --font-mono: var(--font-fragment-mono);
+  /* Status: semantic and distinct from the brand teal (hue 172). Warning is
+     deliberately NOT Proxy Amber: burnt orange at hue 27 cannot be mistaken
+     for the proxy mark at hue 37. Every tone below clears AA on its own
+     tint, and the -dark tones clear AA on an ink ground. */
+  --color-success-500: #1F7A43;
+  --color-success-700: #1B6F3D;
+  --color-success-100: #EFF2F0;
+  --color-success-dark: #8BCFA6;
+  --color-danger-500: #B3261E;
+  --color-danger-700: #A4221B;
+  --color-danger-100: #F6EFEF;
+  --color-danger-dark: #D68985;
+  --color-warning-500: #9A4F11;
+  --color-warning-700: #8D480F;
+  --color-warning-100: #F4F0EF;
+  --color-warning-dark: #DBA980;
+  --color-info-500: #1F5FA6;
+  --color-info-700: #1B5698;
+  --color-info-100: #EFF1F5;
+  --color-info-dark: #86ABD5;
+  --color-rose-500: #B3261E;
+  --color-rose-700: #A4221B;
+
+  /* Chart series. Outcomes carry the status meaning; the direction pair is
+     separated by hue and lightness so it survives greyscale. */
+  --color-chart-answered: #35A866;
+  --color-chart-missed: #B9651C;
+  --color-chart-failed: #8E1E17;
+  --color-chart-a2b: #0B7A6B;
+  --color-chart-b2a: #1F5FA6;
+  --color-chart-grid: #ECEDEE;
+  --color-chart-axis: #5B6B7A;
+
+  /* Semantic surfaces */
+  --color-canvas: #EEF3F2;
+  --color-surface: #FFFFFF;
+  --color-sunken: #F8FAF9;
+  --color-mute: #ECEDEE;
+  --color-line: #ECEDEE;
+  --color-line-strong: #D4D6D9;
+  --color-fg: #0E1B2C;
+  --color-fg-2: #5B6B7A;
+  --color-fg-3: #88919A;
+
+  /* Typography: Sora for everything but numbers, code and API values. */
+  --font-sans: var(--font-sora);
+  --font-mono: var(--font-plex-mono);
 
   /* Fluid type scale */
   --text-display: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
