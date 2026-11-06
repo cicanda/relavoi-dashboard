@@ -130,8 +130,8 @@ const client = new Relavoi({
 });
 
 const session = await client.sessions.create({
-  agentPhone: '+2348012345678',
-  customerPhone: '+2348087654321',
+  agentPhone: '+2349000000001',
+  customerPhone: '+2349000000002',
   metadata: { orderId: 'ORD-9281' },
   gracePeriodMinutes: 15,
 });
@@ -145,8 +145,8 @@ const KOTLIN_SNIPPET = `val relavoi = Relavoi.Builder(context)
   .build()
 
 val session = relavoi.sessions.create(
-  agentPhone = "+2348012345678",
-  customerPhone = "+2348087654321",
+  agentPhone = "+2349000000001",
+  customerPhone = "+2349000000002",
   metadata = mapOf("orderId" to "ORD-9281"),
   gracePeriodMinutes = 15,
 )
@@ -159,8 +159,8 @@ const SWIFT_SNIPPET = `let client = Relavoi(
 )
 
 let session = try await client.sessions.create(
-  agentPhone: "+2348012345678",
-  customerPhone: "+2348087654321",
+  agentPhone: "+2349000000001",
+  customerPhone: "+2349000000002",
   metadata: ["orderId": "ORD-9281"],
   gracePeriodMinutes: 15
 )

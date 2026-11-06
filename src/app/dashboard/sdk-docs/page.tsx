@@ -180,7 +180,7 @@ const device = await fetch("https://api.relavoi.com/v1/auth/sdk-token", {
     authorization: \`Bearer \${tenant.accessToken}\`,
   },
   body: JSON.stringify({
-    userPhone: "+2348012345678",
+    userPhone: "+2349000000001",
     scope: ["sessions:verify", "sessions:read", "devices:write"],
   }),
 }).then((r) => r.json());

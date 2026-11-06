@@ -144,7 +144,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
  *
  * The normalised number is shown rather than written back into the field: a
  * field that rewrites itself under the cursor is hostile to type into, and the
- * seller needs to see that 08012345678 reached the API as +2348012345678.
+ * seller needs to see that 09000000001 reached the API as +2349000000001.
  */
 export function PhoneField({
   label,

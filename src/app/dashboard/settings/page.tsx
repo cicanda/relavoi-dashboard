@@ -620,7 +620,7 @@ function SessionDefaultsCard({
             type="tel"
             value={supportPhone}
             onChange={(e) => setSupportPhone(e.target.value)}
-            placeholder="+2348012345678"
+            placeholder="+2349000000001"
             className={`${inputClass} font-mono`}
           />
         </div>

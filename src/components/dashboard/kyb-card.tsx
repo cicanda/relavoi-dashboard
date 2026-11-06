@@ -666,7 +666,7 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
                   className={inputClass}
                   value={form.contactPhone}
                   onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                  placeholder="+2348012345678"
+                  placeholder="+2349000000001"
                   inputMode="tel"
                 />
               </div>
