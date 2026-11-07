@@ -317,13 +317,6 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
     box-shadow: var(--shadow-sm);
   }
   .btn-secondary:hover:not(:disabled) { background: var(--color-bone-50); color: var(--color-ink-900); border-color: var(--color-ink-300); }
-  .btn-danger {
-    background: var(--color-danger-500);
-    color: var(--color-paper);
-  }
-  .btn-danger:hover:not(:disabled) { background: var(--color-danger-700); transform: translateY(-1px); }
-  .btn-ghost { color: var(--color-ink-600); }
-  .btn-ghost:hover:not(:disabled) { background: rgb(14 27 44 / 0.05); color: var(--color-ink-900); }
   .btn-sm { height: 2.25rem; padding: 0 0.875rem; font-size: 13px; }
 
   /* Inline text link with an arrow, e.g. "View all ›" */
