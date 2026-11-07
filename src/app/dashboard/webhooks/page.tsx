@@ -214,12 +214,67 @@ func verifyRelavoiWebhook(body []byte, ts, sig, secret string) bool {
 type VerifyTab = "node" | "python" | "go";
 
 // ─── Page ────────────────────────────────────────────────────────────────────
+/**
+ * Waits for the config, then hands it to the form as its starting values.
+ *
+ * The form used to mount empty and fill itself in from two effects, each
+ * guarded by its own "have I done this yet" boolean. That is four pieces of
+ * state standing in for one fact, and it put a frame on screen in which the
+ * URL field was blank for an endpoint that is configured. Seeding `useState`
+ * from props at mount does the same job with none of it, and the guards go
+ * away because a component is only mounted once.
+ *
+ * Seeded at mount and not re-seeded afterwards, which is what the booleans
+ * were enforcing: a background refetch must never pull the field out from
+ * under somebody who is typing in it.
+ */
 export default function WebhooksPage() {
+  const configQuery = useQuery({
+    queryKey: ["webhook-config"],
+    queryFn: getWebhookConfig,
+  });
+
+  if (configQuery.isPending) {
+    return (
+      <div>
+        <PageHeader
+          title="Webhooks"
+          description="Receive real-time events about your sessions and calls"
+        />
+        <div className="text-sm text-ink-500">Loading webhook settings…</div>
+      </div>
+    );
+  }
+
+  // An error leaves `data` undefined and the form starts empty, which is where
+  // it started before this query existed.
+  const saved = configQuery.data;
+  const savedEvents = saved?.events ?? [];
+  return (
+    <WebhooksForm
+      initialUrl={saved?.url ?? ""}
+      // No saved rows means every event, which is what the API does with an
+      // empty set, so an endpoint registered before this control existed keeps
+      // receiving exactly what it receives today.
+      initialEvents={savedEvents.length > 0 ? savedEvents : ALL_EVENT_IDS}
+      savedUrl={saved?.url ?? null}
+    />
+  );
+}
+
+function WebhooksForm({
+  initialUrl,
+  initialEvents,
+  savedUrl,
+}: {
+  initialUrl: string;
+  initialEvents: string[];
+  savedUrl: string | null;
+}) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const [urlInput, setUrlInput] = useState("");
-  const [urlInitialized, setUrlInitialized] = useState(false);
+  const [urlInput, setUrlInput] = useState(initialUrl);
   /**
    * Which events go to the endpoint.
    *
@@ -228,38 +283,15 @@ export default function WebhooksPage() {
    * API has stored the selection per tenant and filtered deliveries against
    * it since tenant webhooks shipped, so the only thing missing was this.
    */
-  const [events, setEvents] = useState<string[]>(ALL_EVENT_IDS);
-  const [eventsInitialized, setEventsInitialized] = useState(false);
+  const [events, setEvents] = useState<string[]>(initialEvents);
   const [regenOpen, setRegenOpen] = useState(false);
   const [verifyTab, setVerifyTab] = useState<VerifyTab>("node");
-
-  const configQuery = useQuery({
-    queryKey: ["webhook-config"],
-    queryFn: getWebhookConfig,
-  });
 
   const logsQuery = useQuery({
     queryKey: ["webhook-logs"],
     queryFn: () => listWebhookLogs({ limit: 50 }),
     refetchInterval: 30_000,
   });
-
-  useEffect(() => {
-    if (!urlInitialized && configQuery.data?.url) {
-      setUrlInput(configQuery.data.url);
-      setUrlInitialized(true);
-    }
-  }, [configQuery.data, urlInitialized]);
-
-  useEffect(() => {
-    if (eventsInitialized || !configQuery.data) return;
-    const saved = configQuery.data.events ?? [];
-    // No saved rows means every event, which is what the API does with an
-    // empty set, so an endpoint registered before this control existed keeps
-    // receiving exactly what it receives today.
-    setEvents(saved.length > 0 ? saved : ALL_EVENT_IDS);
-    setEventsInitialized(true);
-  }, [configQuery.data, eventsInitialized]);
 
   const registerMutation = useMutation({
     mutationFn: (url: string) => registerWebhook(url, events),
@@ -328,7 +360,7 @@ export default function WebhooksPage() {
   }
 
   function handleRegen() {
-    const url = configQuery.data?.url ?? urlInput.trim();
+    const url = savedUrl ?? urlInput.trim();
     if (!url) {
       toast.error("Set a URL first");
       setRegenOpen(false);

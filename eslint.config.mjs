@@ -23,31 +23,35 @@ export default [
   },
   {
     /**
-     * Two rules from eslint-plugin-react-hooks 7 report real debt that cannot
-     * be cleared in the commit that introduces linting.
+     * Two rules from eslint-plugin-react-hooks 7, errors since 7 November
+     * 2026, when the eleven findings they had been reporting as warnings were
+     * cleared. They are errors and not warnings because the debt is paid and
+     * the only thing left to do is keep it paid: a warning that nobody has to
+     * act on is how eleven of these accumulated in the first place.
      *
-     * `set-state-in-effect` fires 10 times, all of it the same two patterns:
-     * resetting pagination when a filter changes, and accumulating a query's
-     * pages into state. Both are genuine (React can render an intermediate
-     * state), and both are fixed by restructuring how the list screens hold
-     * their data, not by moving a line. That is a behaviour change to the
-     * sessions, calls, settings and webhooks screens, three of which Genesis
-     * has redesigned, so it wants its own commit and its own review.
+     * `set-state-in-effect` fired 10 times, in three shapes. Two list screens
+     * held a query's accumulated pages in state and appended to them from an
+     * effect, with a second effect emptying them when the filter changed;
+     * both are useInfiniteQuery now, and the filter lives in the query key.
+     * Four forms copied fetched values into state from an effect; each is
+     * either seeded from props at mount or keyed on the record, so React
+     * resets it rather than a render doing it afterwards. One page set its
+     * own error state in an effect for a condition it could read off the URL
+     * during render.
      *
-     * `purity` fires once, on the session detail screen reading the clock
-     * during render to decide whether a session is still live. Also real: the
-     * same render can produce two answers. The honest fix is to hold the time
-     * in state and refresh it, which again changes what that screen does.
+     * `purity` fired once, on the session detail screen reading the clock in
+     * the render body to decide whether a session was still live. It now
+     * reads src/lib/use-now.ts, which keeps the clock outside render and
+     * ticks, so the screen notices an expiry instead of being right only when
+     * something else happens to re-render it.
      *
-     * Warnings, so they stay visible and counted, rather than disabled, which
-     * would make them invisible, or left as errors, which would mean landing
-     * the gate red. Everything else, including any NEW instance of any other
-     * rule, still fails the build. Listed site by site in docs/backlog.md.
+     * If one of these fires again, it is a new instance and not old debt.
+     * Fix it; do not turn this line back down.
      */
     files: ['src/**/*.{ts,tsx}'],
     rules: {
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/purity': 'warn',
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/purity': 'error',
     },
   },
 ];

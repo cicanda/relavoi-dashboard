@@ -107,12 +107,36 @@ export default function SettingsPage() {
     );
   }
 
+  /**
+   * Remount a form card when the server's copy of its fields changes, rather
+   * than copying them into state from an effect.
+   *
+   * Typing does not move these values: they come from /config. So a key built
+   * from them is stable for the whole time somebody is editing, and changes
+   * exactly when a save lands or when the workspace is edited somewhere else,
+   * which is when the form should go back to showing what is stored. That is
+   * the same moment the old effects fired, with one fewer render and no
+   * window in which the inputs and the data disagree.
+   */
+  const sessionDefaultsKey = [
+    tenant.defaultGracePeriod,
+    tenant.expiredCallBehavior,
+    tenant.supportPhone,
+    tenant.expiredMessage,
+    tenant.defaultSessionTtlMin,
+  ].join("|");
+
   return (
     <>
       <PageHeader title="Settings" description="Workspace, team, and account preferences." />
 
       <div className="space-y-5">
-        <GeneralCard tenant={tenant} onSave={(patch) => patchMut.mutate(patch)} saving={patchMut.isPending} />
+        <GeneralCard
+          key={tenant.name}
+          tenant={tenant}
+          onSave={(patch) => patchMut.mutate(patch)}
+          saving={patchMut.isPending}
+        />
 
         {/* Verification sits high up: it is the one thing standing between a
             new workspace and live calls. */}
@@ -121,6 +145,7 @@ export default function SettingsPage() {
         {canManageTeam && <TeamCard />}
 
         <SessionDefaultsCard
+          key={sessionDefaultsKey}
           tenant={tenant}
           onSave={(patch) => patchMut.mutate(patch)}
           saving={patchMut.isPending}
@@ -201,8 +226,10 @@ function GeneralCard({
   onSave: (patch: Partial<Tenant>) => void;
   saving: boolean;
 }) {
+  // No effect syncing this back from `tenant`. The parent remounts this card
+  // when the server's name changes, which resets the field by construction;
+  // see the key on <GeneralCard> below.
   const [name, setName] = useState(tenant.name);
-  useEffect(() => setName(tenant.name), [tenant.name]);
 
   const dirty = name.trim() !== tenant.name && name.trim().length > 0;
 
@@ -539,19 +566,8 @@ function SessionDefaultsCard({
   // session manager applies it to every session it creates.
   const [maxDuration, setMaxDuration] = useState<number>(tenant.defaultSessionTtlMin ?? 120);
 
-  useEffect(() => {
-    setGrace(tenant.defaultGracePeriod ?? 15);
-    setExpired(tenant.expiredCallBehavior ?? "DEAD_LINE");
-    setSupportPhone(tenant.supportPhone ?? "");
-    setExpiredMessage(tenant.expiredMessage ?? "");
-    setMaxDuration(tenant.defaultSessionTtlMin ?? 120);
-  }, [
-    tenant.defaultGracePeriod,
-    tenant.expiredCallBehavior,
-    tenant.supportPhone,
-    tenant.expiredMessage,
-    tenant.defaultSessionTtlMin,
-  ]);
+  // No effect syncing these five back from `tenant`: the parent remounts this
+  // card when any of them changes on the server. See sessionDefaultsKey.
 
   const trimmedMessage = expiredMessage.trim();
   // The API refuses this pairing with 422. Catching it here means the person

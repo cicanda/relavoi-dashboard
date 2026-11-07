@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -113,25 +113,36 @@ export default function SessionsListPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [stateFilter, setStateFilter] = useState<string>("group:all");
   const [period, setPeriod] = useState<Period>("all");
-  const [pages, setPages] = useState<Array<{ data: Session[]; after?: string | null }>>([]);
-  const [activeAfter, setActiveAfter] = useState<string | undefined>(undefined);
 
-  // Reset paging when filter changes
-  useEffect(() => {
-    setPages([]);
-    setActiveAfter(undefined);
-  }, [stateFilter]);
-
-  const q = useQuery({
-    queryKey: ["sessions", stateFilter || "all", activeAfter ?? "first"],
-    queryFn: () =>
+  /**
+   * One infinite query instead of a page cursor in state and two effects.
+   *
+   * What was here held the fetched pages in component state and appended to
+   * them from an effect watching the query result, with a second effect
+   * emptying both when the filter changed. Two things were wrong with that.
+   * The accumulated rows are derived from the query, so holding them in state
+   * is a second copy that can disagree with the cache; and because React can
+   * commit the filter change before the reset effect runs, the list could
+   * paint the old filter's rows under the new filter's heading for a frame.
+   *
+   * The filter is part of the query key, so changing it selects a different
+   * cached list rather than clearing this one: going back to a filter you
+   * were just on shows its rows at once instead of refetching page one.
+   */
+  const q = useInfiniteQuery({
+    queryKey: ["sessions", stateFilter || "all"],
+    queryFn: ({ pageParam }) =>
       listSessions({
         ...(stateFilter.startsWith("group:")
           ? { status: stateFilter.slice(6) as "active" | "ended" | "all" }
           : { state: stateFilter || undefined }),
         limit: 25,
-        after: activeAfter,
+        after: pageParam,
       }),
+    initialPageParam: undefined as string | undefined,
+    // The API sends `after: null` on the last page, and null is a page param
+    // the query would happily fetch with. undefined is what stops it.
+    getNextPageParam: (last) => last.pagination.after ?? undefined,
     staleTime: 30_000,
   });
 
@@ -144,20 +155,10 @@ export default function SessionsListPage() {
     if (!q.error) errorShown.current = false;
   }, [q.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Accumulate pages
-  useEffect(() => {
-    if (!q.data) return;
-    setPages((prev) => {
-      // If first page (no activeAfter), replace
-      if (!activeAfter) return [{ data: q.data.data, after: q.data.pagination.after }];
-      // Avoid duplicating if effect re-runs on same data
-      const last = prev[prev.length - 1];
-      if (last && last.data === q.data.data) return prev;
-      return [...prev, { data: q.data.data, after: q.data.pagination.after }];
-    });
-  }, [q.data, activeAfter]);
-
-  const rowsRaw = useMemo<Session[]>(() => pages.flatMap((p) => p.data), [pages]);
+  const rowsRaw = useMemo<Session[]>(
+    () => q.data?.pages.flatMap((p) => p.data) ?? [],
+    [q.data],
+  );
   const cutoffMs = periodStartMs(period);
   const rows = useMemo(
     () =>
@@ -170,9 +171,8 @@ export default function SessionsListPage() {
     [rowsRaw, cutoffMs],
   );
 
-  const lastAfter = pages.length > 0 ? pages[pages.length - 1].after : undefined;
-  const canLoadMore = !!lastAfter && !q.isFetching;
-  const isLoadingFirstPage = q.isLoading && pages.length === 0;
+  const canLoadMore = q.hasNextPage && !q.isFetchingNextPage;
+  const isLoadingFirstPage = q.isLoading;
   const isEmpty = !isLoadingFirstPage && rows.length === 0 && !q.error;
   const open = (id: string) => router.push(`/dashboard/sessions/${id}`);
 
@@ -344,16 +344,14 @@ export default function SessionsListPage() {
         )}
 
         {/* Load more */}
-        {(canLoadMore || q.isFetching) && rows.length > 0 && (
+        {(canLoadMore || q.isFetchingNextPage) && rows.length > 0 && (
           <div className="td flex items-center justify-center">
             <button
               disabled={!canLoadMore}
-              onClick={() => {
-                if (lastAfter) setActiveAfter(lastAfter);
-              }}
+              onClick={() => void q.fetchNextPage()}
               className="btn btn-secondary btn-sm"
             >
-              {q.isFetching ? "Loading..." : "Load more"}
+              {q.isFetchingNextPage ? "Loading..." : "Load more"}
             </button>
           </div>
         )}

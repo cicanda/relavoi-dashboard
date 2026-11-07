@@ -23,6 +23,7 @@ import {
   problemMessage,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-store";
+import { useNow } from "@/lib/use-now";
 import {
   fmtAbsolute,
   fmtDuration,
@@ -76,6 +77,7 @@ export default function SessionDetailPage({
   const toast = useToast();
   const qc = useQueryClient();
   const { user } = useAuth();
+  const now = useNow();
   // Reading a session is open to everyone; changing one is not.
   const canWrite = user?.role !== "VIEWER";
 
@@ -181,10 +183,16 @@ export default function SessionDetailPage({
   // passed is dead, whatever its state column still says until the expiry
   // worker sweeps it. Offering to end it, or to retarget it, would be offering
   // something the router would refuse.
+  //
+  // `now` comes from the shared clock rather than from Date.now() here. Read
+  // in the render body it was impure, and worse, nothing re-rendered when it
+  // changed: leave this page open until the session expires and both buttons
+  // stayed enabled, because no prop had moved. The clock ticks, so now the
+  // screen notices.
   const expiresAtMs = Date.parse(s.expiresAt);
   const stillLive =
     (s.state === "ACTIVE" || s.state === "GRACE_PERIOD") &&
-    (!Number.isFinite(expiresAtMs) || expiresAtMs > Date.now());
+    (!Number.isFinite(expiresAtMs) || expiresAtMs > now);
   const rawReference = s.metadata?.reference;
   const reference =
     typeof rawReference === "string" && rawReference.trim() ? rawReference.trim() : null;

@@ -31,30 +31,36 @@ function ReturnInner() {
   const router = useRouter();
   const reference = params.get("reference") ?? params.get("trxref");
 
-  const [state, setState] = useState<"checking" | "done" | "pending" | "failed">("checking");
+  // A link with no reference is a fact about the URL, known at render. It used
+  // to be an effect that mounted the page as "checking" and then set it to
+  // "failed", so the first paint said we were confirming a payment we had no
+  // reference for. Deriving it means that frame never happens.
+  const [state, setState] = useState<"checking" | "done" | "pending" | "failed">(
+    reference ? "checking" : "failed",
+  );
   const [result, setResult] = useState<TopUpVerified | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    reference ? null : "This link is missing its payment reference.",
+  );
   // Strict mode mounts twice in development; verifying twice is harmless but
   // noisy, and the guard keeps the attempt count honest.
   const started = useRef(false);
 
   useEffect(() => {
+    if (!reference) return;
     if (started.current) return;
     started.current = true;
 
-    if (!reference) {
-      setState("failed");
-      setError("This link is missing its payment reference.");
-      return;
-    }
-
+    // Narrowed once, into a local, because `check` is a hoisted function
+    // declaration and TypeScript will not carry the guard across it.
+    const ref: string = reference;
     let cancelled = false;
     let attempts = 0;
 
     async function check(): Promise<void> {
       attempts += 1;
       try {
-        const res = await verifyTopUp(reference as string);
+        const res = await verifyTopUp(ref);
         if (cancelled) return;
         if (res.status === "credited" || res.status === "already-credited") {
           setResult(res);

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -107,34 +107,33 @@ export default function CallsHistoryPage() {
   const [direction, setDirection] = useState("");
   const [period, setPeriod] = useState<Period>("30d");
 
-  const [pages, setPages] = useState<Array<{ data: CallRecord[]; after?: string | null }>>([]);
-  const [activeAfter, setActiveAfter] = useState<string | undefined>(undefined);
-
   const range = useMemo(() => periodRange(period), [period]);
 
-  // Reset on filter change
-  useEffect(() => {
-    setPages([]);
-    setActiveAfter(undefined);
-  }, [status, direction, period]);
-
-  const q = useQuery({
-    queryKey: [
-      "calls",
-      status || "all",
-      direction || "all",
-      period,
-      activeAfter ?? "first",
-    ],
-    queryFn: () =>
+  /**
+   * One infinite query instead of a page cursor in state and two effects.
+   * Same reasoning as the sessions list, which had the identical pair: the
+   * accumulated rows are derived from the query and do not belong in state,
+   * and the separate reset effect could leave the previous filter's rows on
+   * screen for a frame after the filter changed.
+   *
+   * The three filters are in the query key, so changing one selects its own
+   * cached list rather than emptying this one.
+   */
+  const q = useInfiniteQuery({
+    queryKey: ["calls", status || "all", direction || "all", period],
+    queryFn: ({ pageParam }) =>
       listCalls({
         status: status || undefined,
         direction: direction || undefined,
         periodStart: range.periodStart,
         periodEnd: range.periodEnd,
         limit: 25,
-        after: activeAfter,
+        after: pageParam,
       }),
+    initialPageParam: undefined as string | undefined,
+    // The API sends `after: null` on the last page, and null is a page param
+    // the query would happily fetch with. undefined is what stops it.
+    getNextPageParam: (last) => last.pagination.after ?? undefined,
     staleTime: 30_000,
   });
 
@@ -147,17 +146,10 @@ export default function CallsHistoryPage() {
     if (!q.error) errShown.current = false;
   }, [q.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!q.data) return;
-    setPages((prev) => {
-      if (!activeAfter) return [{ data: q.data.data, after: q.data.pagination.after }];
-      const last = prev[prev.length - 1];
-      if (last && last.data === q.data.data) return prev;
-      return [...prev, { data: q.data.data, after: q.data.pagination.after }];
-    });
-  }, [q.data, activeAfter]);
-
-  const rows = useMemo<CallRecord[]>(() => pages.flatMap((p) => p.data), [pages]);
+  const rows = useMemo<CallRecord[]>(
+    () => q.data?.pages.flatMap((p) => p.data) ?? [],
+    [q.data],
+  );
 
   // Stats client-side
   const stats = useMemo(() => {
@@ -182,9 +174,8 @@ export default function CallsHistoryPage() {
     return { total, answered, failed, avgDuration, answerRate };
   }, [rows]);
 
-  const lastAfter = pages.length > 0 ? pages[pages.length - 1].after : undefined;
-  const canLoadMore = !!lastAfter && !q.isFetching;
-  const isLoadingFirstPage = q.isLoading && pages.length === 0;
+  const canLoadMore = q.hasNextPage && !q.isFetchingNextPage;
+  const isLoadingFirstPage = q.isLoading;
   const isEmpty = !isLoadingFirstPage && rows.length === 0 && !q.error;
 
   return (
@@ -378,16 +369,14 @@ export default function CallsHistoryPage() {
           </table>
         </div>
 
-        {(canLoadMore || q.isFetching) && rows.length > 0 && (
+        {(canLoadMore || q.isFetchingNextPage) && rows.length > 0 && (
           <div className="td flex items-center justify-center">
             <button
               disabled={!canLoadMore}
-              onClick={() => {
-                if (lastAfter) setActiveAfter(lastAfter);
-              }}
+              onClick={() => void q.fetchNextPage()}
               className="btn btn-secondary btn-sm"
             >
-              {q.isFetching ? "Loading..." : "Load more"}
+              {q.isFetchingNextPage ? "Loading..." : "Load more"}
             </button>
           </div>
         )}

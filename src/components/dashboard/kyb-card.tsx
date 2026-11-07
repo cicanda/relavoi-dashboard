@@ -388,48 +388,6 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
   const q = useQuery({ queryKey: ["kyb"], queryFn: getKyb, staleTime: 15_000 });
   const state = q.data;
 
-  const [form, setForm] = useState<KybDetailsPayload>({
-    registrationType: "COMPANY",
-    legalName: "",
-    registrationNumber: "",
-    registeredAddress: "",
-    city: "",
-    state: "",
-    contactName: "",
-    contactPhone: "",
-    website: "",
-    socialLinks: [],
-  });
-
-  // Seed the form from the server once, and again whenever the saved details
-  // change underneath (a resubmission, or another admin editing).
-  useEffect(() => {
-    if (!state) return;
-    const d = state.details;
-    setForm({
-      registrationType: d.registrationType ?? "COMPANY",
-      legalName: d.legalName ?? "",
-      registrationNumber: d.registrationNumber ?? "",
-      registeredAddress: d.registeredAddress ?? "",
-      city: d.city ?? "",
-      state: d.state ?? "",
-      contactName: d.contactName ?? "",
-      contactPhone: d.contactPhone ?? "",
-      website: d.website ?? "",
-      socialLinks: d.socialLinks ?? [],
-    });
-  }, [state?.details]);
-
-  const detailsMut = useMutation({
-    mutationFn: (payload: KybDetailsPayload) => putKybDetails(payload),
-    onSuccess: () => {
-      toast.success("Business details saved");
-      void qc.invalidateQueries({ queryKey: ["kyb"] });
-    },
-    onError: (err) =>
-      toast.error("Could not save", extractErrorMessage(err, "Check the fields and try again.")),
-  });
-
   const submitMut = useMutation({
     mutationFn: submitKyb,
     onSuccess: () => {
@@ -579,178 +537,13 @@ export function BusinessVerificationCard({ canManage }: { canManage: boolean }) 
         )}
 
         {showForm && (
-          <div className="space-y-4">
-            {/* Stacked on a phone, two columns from sm up. */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
-              <div className="sm:col-span-2">
-                <Label>Registered name, exactly as on the certificate</Label>
-                <input
-                  className={inputClass}
-                  value={form.legalName}
-                  onChange={(e) => setForm({ ...form, legalName: e.target.value })}
-                  placeholder="Quickeatables Delivery Limited"
-                />
-              </div>
-
-              <div>
-                <Label>Registration type</Label>
-                <select
-                  className={selectClass}
-                  value={form.registrationType}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      registrationType: e.target.value as KybDetailsPayload["registrationType"],
-                    })
-                  }
-                >
-                  <option value="COMPANY">Limited company (RC)</option>
-                  <option value="BUSINESS_NAME">Business name (BN)</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <Label>Registration number</Label>
-                <input
-                  className={inputClass}
-                  value={form.registrationNumber}
-                  onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
-                  placeholder="RC 1654321"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <Label>Registered address</Label>
-                <input
-                  className={inputClass}
-                  value={form.registeredAddress}
-                  onChange={(e) => setForm({ ...form, registeredAddress: e.target.value })}
-                  placeholder="14 Admiralty Way, Lekki Phase 1"
-                />
-              </div>
-
-              <div>
-                <Label>City</Label>
-                <input
-                  className={inputClass}
-                  value={form.city ?? ""}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  placeholder="Lagos"
-                />
-              </div>
-
-              <div>
-                <Label>State</Label>
-                <input
-                  className={inputClass}
-                  value={form.state}
-                  onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  placeholder="Lagos"
-                />
-              </div>
-
-              <div>
-                <Label>Contact name</Label>
-                <input
-                  className={inputClass}
-                  value={form.contactName}
-                  onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-                  placeholder="Full name"
-                />
-              </div>
-
-              <div>
-                <Label>Contact phone</Label>
-                <input
-                  className={inputClass}
-                  value={form.contactPhone}
-                  onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                  placeholder="+2349000000001"
-                  inputMode="tel"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <Label>Website (optional)</Label>
-                <input
-                  className={inputClass}
-                  value={form.website ?? ""}
-                  onChange={(e) => setForm({ ...form, website: e.target.value })}
-                  placeholder="https://example.com"
-                />
-                <p className="text-[12px] text-ink-500 mt-1">
-                  Must start with https://
-                </p>
-              </div>
-
-              <div className="sm:col-span-2">
-                <Label>Social media profiles (optional)</Label>
-                <p className="text-[12px] text-ink-500 mb-2">
-                  A live page with real customers on it helps us verify you faster. Add as many as
-                  you have. Each must start with https://
-                </p>
-                <div className="space-y-2">
-                  {(form.socialLinks ?? []).map((link, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input
-                        className={inputClass}
-                        value={link}
-                        onChange={(e) => {
-                          const next = [...(form.socialLinks ?? [])];
-                          next[i] = e.target.value;
-                          setForm({ ...form, socialLinks: next });
-                        }}
-                        placeholder="https://instagram.com/yourbusiness"
-                      />
-                      <button
-                        type="button"
-                        aria-label={`Remove profile link ${i + 1}`}
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            socialLinks: (form.socialLinks ?? []).filter((_, j) => j !== i),
-                          })
-                        }
-                        className="shrink-0 px-3 rounded-xl border border-ink-200 text-[13px] text-ink-600 hover:bg-bone-50"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({ ...form, socialLinks: [...(form.socialLinks ?? []), ""] })
-                  }
-                  disabled={(form.socialLinks ?? []).length >= 25}
-                  className="mt-2 text-[13px] text-ink-700 underline hover:no-underline disabled:opacity-40 disabled:no-underline"
-                >
-                  {(form.socialLinks ?? []).length === 0 ? "Add a profile link" : "Add another"}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                className={primaryBtn}
-                disabled={detailsMut.isPending}
-                onClick={() =>
-                  detailsMut.mutate({
-                    ...form,
-                    city: form.city?.trim() ? form.city.trim() : null,
-                    website: form.website?.trim() ? form.website.trim() : null,
-                    socialLinks: (form.socialLinks ?? [])
-                      .map((l) => l.trim())
-                      .filter((l) => l.length > 0),
-                  })
-                }
-              >
-                {detailsMut.isPending ? "Saving…" : "Save details"}
-              </button>
-            </div>
-          </div>
+          /* Keyed on the saved details, so the form goes back to what is
+             stored whenever that changes underneath: a resubmission, or
+             another admin editing. That is what the effect it replaces did,
+             except a remount cannot land mid-render the way a setState in an
+             effect can, and it cannot fire while this person is typing,
+             because typing does not change the saved details. */
+          <DetailsForm key={detailsKey(state.details)} details={state.details} />
         )}
 
         {/* ── Documents ── */}
@@ -925,6 +718,235 @@ export function KybPromptModal({
 // something about not being live yet, and stacking two of them turns the top of
 // every page into a wall. Verification comes first because it is the thing
 // standing in the way; the sandbox note follows as context.
+/**
+ * The business details form.
+ *
+ * Its own component so that its starting values can come from props at mount
+ * and a key can reset it, rather than an effect copying the server's row into
+ * state after every render that changes it. `pending`, `deletingId` and
+ * `forceEdit` stay with the card above, so saving details never disturbs an
+ * upload that is in flight.
+ */
+function detailsKey(d: KybState["details"]): string {
+  // Only the fields this form edits. A change to anything else on the
+  // application must not throw away what somebody has half typed.
+  return JSON.stringify([
+    d.registrationType,
+    d.legalName,
+    d.registrationNumber,
+    d.registeredAddress,
+    d.city,
+    d.state,
+    d.contactName,
+    d.contactPhone,
+    d.website,
+    d.socialLinks,
+  ]);
+}
+
+function DetailsForm({ details }: { details: KybState["details"] }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+
+  const [form, setForm] = useState<KybDetailsPayload>({
+    registrationType: details.registrationType ?? "COMPANY",
+    legalName: details.legalName ?? "",
+    registrationNumber: details.registrationNumber ?? "",
+    registeredAddress: details.registeredAddress ?? "",
+    city: details.city ?? "",
+    state: details.state ?? "",
+    contactName: details.contactName ?? "",
+    contactPhone: details.contactPhone ?? "",
+    website: details.website ?? "",
+    socialLinks: details.socialLinks ?? [],
+  });
+
+  const detailsMut = useMutation({
+    mutationFn: (payload: KybDetailsPayload) => putKybDetails(payload),
+    onSuccess: () => {
+      toast.success("Business details saved");
+      void qc.invalidateQueries({ queryKey: ["kyb"] });
+    },
+    onError: (err) =>
+      toast.error("Could not save", extractErrorMessage(err, "Check the fields and try again.")),
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Stacked on a phone, two columns from sm up. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">
+        <div className="sm:col-span-2">
+          <Label>Registered name, exactly as on the certificate</Label>
+          <input
+            className={inputClass}
+            value={form.legalName}
+            onChange={(e) => setForm({ ...form, legalName: e.target.value })}
+            placeholder="Quickeatables Delivery Limited"
+          />
+        </div>
+
+        <div>
+          <Label>Registration type</Label>
+          <select
+            className={selectClass}
+            value={form.registrationType}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                registrationType: e.target.value as KybDetailsPayload["registrationType"],
+              })
+            }
+          >
+            <option value="COMPANY">Limited company (RC)</option>
+            <option value="BUSINESS_NAME">Business name (BN)</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <Label>Registration number</Label>
+          <input
+            className={inputClass}
+            value={form.registrationNumber}
+            onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
+            placeholder="RC 1654321"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label>Registered address</Label>
+          <input
+            className={inputClass}
+            value={form.registeredAddress}
+            onChange={(e) => setForm({ ...form, registeredAddress: e.target.value })}
+            placeholder="14 Admiralty Way, Lekki Phase 1"
+          />
+        </div>
+
+        <div>
+          <Label>City</Label>
+          <input
+            className={inputClass}
+            value={form.city ?? ""}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            placeholder="Lagos"
+          />
+        </div>
+
+        <div>
+          <Label>State</Label>
+          <input
+            className={inputClass}
+            value={form.state}
+            onChange={(e) => setForm({ ...form, state: e.target.value })}
+            placeholder="Lagos"
+          />
+        </div>
+
+        <div>
+          <Label>Contact name</Label>
+          <input
+            className={inputClass}
+            value={form.contactName}
+            onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+            placeholder="Full name"
+          />
+        </div>
+
+        <div>
+          <Label>Contact phone</Label>
+          <input
+            className={inputClass}
+            value={form.contactPhone}
+            onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+            placeholder="+2349000000001"
+            inputMode="tel"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label>Website (optional)</Label>
+          <input
+            className={inputClass}
+            value={form.website ?? ""}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+            placeholder="https://example.com"
+          />
+          <p className="text-[12px] text-ink-500 mt-1">
+            Must start with https://
+          </p>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label>Social media profiles (optional)</Label>
+          <p className="text-[12px] text-ink-500 mb-2">
+            A live page with real customers on it helps us verify you faster. Add as many as
+            you have. Each must start with https://
+          </p>
+          <div className="space-y-2">
+            {(form.socialLinks ?? []).map((link, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  className={inputClass}
+                  value={link}
+                  onChange={(e) => {
+                    const next = [...(form.socialLinks ?? [])];
+                    next[i] = e.target.value;
+                    setForm({ ...form, socialLinks: next });
+                  }}
+                  placeholder="https://instagram.com/yourbusiness"
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove profile link ${i + 1}`}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      socialLinks: (form.socialLinks ?? []).filter((_, j) => j !== i),
+                    })
+                  }
+                  className="shrink-0 px-3 rounded-xl border border-ink-200 text-[13px] text-ink-600 hover:bg-bone-50"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setForm({ ...form, socialLinks: [...(form.socialLinks ?? []), ""] })
+            }
+            disabled={(form.socialLinks ?? []).length >= 25}
+            className="mt-2 text-[13px] text-ink-700 underline hover:no-underline disabled:opacity-40 disabled:no-underline"
+          >
+            {(form.socialLinks ?? []).length === 0 ? "Add a profile link" : "Add another"}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          className={primaryBtn}
+          disabled={detailsMut.isPending}
+          onClick={() =>
+            detailsMut.mutate({
+              ...form,
+              city: form.city?.trim() ? form.city.trim() : null,
+              website: form.website?.trim() ? form.website.trim() : null,
+              socialLinks: (form.socialLinks ?? [])
+                .map((l) => l.trim())
+                .filter((l) => l.length > 0),
+            })
+          }
+        >
+          {detailsMut.isPending ? "Saving…" : "Save details"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function KybBanner({
   state,
   href,

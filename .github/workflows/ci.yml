@@ -36,6 +36,18 @@ jobs:
         # when GitHub rate limits it or the runner has no egress.
         run: npm run check:sdk-versions
 
+      - name: Copy guard
+        # No em dashes in anything a tenant reads.
+        run: npm run check:copy
+
+      - name: Tests
+        # Component tests, in jsdom, no backend. Added with the react-hooks
+        # round on 7 November 2026: that round changed how six screens hold
+        # their data, and a green build says nothing about whether a filter
+        # change still shows the previous filter's rows or whether a
+        # background refetch overwrites what somebody is typing.
+        run: npm test
+
       - name: Design tokens
         # Fails on a colour or a font that is not a brand token, and on a
         # Tailwind colour utility whose family is not declared in the token
