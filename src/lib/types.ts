@@ -61,6 +61,16 @@ export interface TenantUser {
   role: Role;
   tenantId: string;
   name?: string;
+  /**
+   * When this address was proven, or null if it has not been. Absent, rather
+   * than null, on the login payload and on anything older than backend
+   * contract 7, which is why the banner treats an absent key as "do not
+   * know" and shows nothing.
+   *
+   * It is not a permission. Nothing is gated on it except outbound mail to a
+   * sandbox workspace.
+   */
+  emailVerifiedAt?: string | null;
 }
 
 export interface Session {

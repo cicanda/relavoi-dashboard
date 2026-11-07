@@ -16,11 +16,12 @@
     "something triggers it again: a push, or the backend deploy script poking",
     "this project's deploy hook."
   ],
-  "minimumBackendContractVersion": 1,
+  "minimumBackendContractVersion": 7,
   "requires": [
     "GET /v1/reference, for the industry and country dropdowns in Settings",
     "industry and country on GET and PATCH /v1/config",
-    "the 12-character password floor on PATCH /v1/auth/dashboard/change-password"
+    "the 12-character password floor on PATCH /v1/auth/dashboard/change-password",
+    "emailVerifiedAt on the user object of GET /v1/tenants/me, which the unverified-email banner and the Verify your email card read"
   ],
   "healthUrl": "https://api.relavoi.com/v1/health"
 }

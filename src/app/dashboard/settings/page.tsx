@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/lib/auth-store";
 import { useToast } from "@/components/toast";
 import { BusinessVerificationCard } from "@/components/dashboard/kyb-card";
+import { VerifyEmailCard } from "@/components/dashboard/email-verification";
 import {
   changePassword,
   getConfig,
@@ -162,6 +163,11 @@ export default function SettingsPage() {
           onSave={(patch) => patchMut.mutate(patch)}
           saving={patchMut.isPending}
         />
+
+        {/* With the password card: both are about this person's own
+            account rather than the workspace. Renders nothing once the
+            address is confirmed. */}
+        <VerifyEmailCard />
 
         <ChangePasswordCard />
       </div>

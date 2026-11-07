@@ -190,8 +190,13 @@ export async function changePassword(currentPassword: string, newPassword: strin
  * ignore it, and a signed-in person resetting their own password is a normal
  * thing to do.
  */
-export async function sendVerificationEmail() {
-  await api.post("/auth/verify-email/send");
+export async function sendVerificationEmail(): Promise<{ alreadyVerified: boolean }> {
+  // 202 with { sent: true } when a link went out, 204 when the address was
+  // already verified. The second is not an error and not a mail, so the
+  // caller needs to tell them apart: starting a cooldown for a link that was
+  // never sent would disable the button for a minute over nothing.
+  const { status } = await api.post("/auth/verify-email/send");
+  return { alreadyVerified: status === 204 };
 }
 
 export async function verifyEmail(token: string) {
