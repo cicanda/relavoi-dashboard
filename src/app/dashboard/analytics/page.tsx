@@ -51,11 +51,23 @@ function asNumber(v: unknown): number {
   return typeof v === "number" && Number.isFinite(v) ? v : 0;
 }
 
+// Chart colours, from the brand token scale in globals.css. Kept here as
+// values because Recharts paints to SVG attributes and cannot read a CSS
+// variable through them. The outcome series are separated by LIGHTNESS as
+// well as hue: hue alone collapses under deuteranopia and in greyscale.
 const CALL_COLORS = {
   answered: "#35A866",
   missed: "#B9651C",
   failed: "#8E1E17",
 };
+
+// Single-series marks. Relay Teal is 5.24:1 on white, so a 2px stroke clears
+// the 3:1 floor for a non-text graphical object; the green this replaced was
+// 2.08:1 and did not.
+const CHART_SERIES = {
+  sessions: "#0B7A6B",
+};
+const CHART_PAPER = "#FFFFFF";
 
 const AXIS_TICK = { fontSize: 11, fill: "#5B6B7A", fontFamily: "var(--font-mono)" };
 
@@ -455,10 +467,10 @@ export default function AnalyticsPage() {
               <Line
                 type="monotone"
                 dataKey="sessions"
-                stroke="#5BC97A"
+                stroke={CHART_SERIES.sessions}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 5, fill: "#5BC97A", stroke: "#FFFFFF", strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: CHART_SERIES.sessions, stroke: CHART_PAPER, strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

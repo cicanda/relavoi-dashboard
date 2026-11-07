@@ -97,6 +97,58 @@
   --color-chart-missed: #B9651C;
   --color-chart-failed: #8E1E17;
   --color-chart-a2b: #0B7A6B;
+
+  /* Tailwind stock families, re-pointed at the brand ----------------------
+     A utility class like bg-red-50 or text-blue-700 is not a colour literal,
+     so a grep for hex and oklch cannot see it. Before this block those classes
+     rendered Tailwind own red, blue, sky and emerald rather than our danger,
+     info and success tones: about 110 call sites across this app and the
+     console. Re-pointing the family fixes every one of them at once and
+     changes no markup.
+
+     A step not listed here still falls through to Tailwind default, which is
+     why scripts/check-design-tokens.mjs also fails on a colour utility whose
+     family is not declared in this block.
+
+     violet is deliberately absent. It is the fourth CATEGORICAL accent on the
+     plan badges and pricing dots, sitting beside sky and signal, and the brand
+     has no fourth accent to give it. Collapsing it into info would make GROWTH
+     and SCALE the same colour. That is a palette decision, so it is listed in
+     the checker allowlist for Genesis rather than guessed at here. */
+
+  /* One derived step the brand ramp did not have: a hairline border for a
+     tinted card. Mixed 60% toward white in linear light, the same rule as
+     every other tint here, giving 1.33:1 on its own tint. Tailwind own
+     red-200 on red-50 is 1.32:1, so the weight is unchanged. */
+  --color-danger-200: #E5CDCC;
+  --color-success-200: #CCD7CF;
+  --color-info-200: #CCD2E1;
+
+  --color-red-50:  #F6EFEF;
+  --color-red-100: #F6EFEF;
+  --color-red-200: #E5CDCC;
+  --color-red-500: #B3261E;
+  --color-red-600: #B3261E;
+  --color-red-700: #A4221B;
+  --color-red-800: #A4221B;
+
+  --color-blue-50:  #EFF1F5;
+  --color-blue-200: #CCD2E1;
+  --color-blue-500: #1F5FA6;
+  --color-blue-700: #1B5698;
+  --color-blue-800: #1B5698;
+
+  --color-sky-300: #86ABD5;
+  --color-sky-500: #1F5FA6;
+  --color-sky-800: #1B5698;
+  --color-sky-900: #1B5698;
+
+  --color-emerald-50:  #EFF2F0;
+  --color-emerald-200: #CCD7CF;
+  --color-emerald-500: #1F7A43;
+  --color-emerald-600: #1F7A43;
+  --color-emerald-800: #1B6F3D;
+  --color-emerald-900: #1B6F3D;
   --color-chart-b2a: #1F5FA6;
   --color-chart-grid: #ECEDEE;
   --color-chart-axis: #5B6B7A;
@@ -266,10 +318,10 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
   }
   .btn-secondary:hover:not(:disabled) { background: var(--color-bone-50); color: var(--color-ink-900); border-color: var(--color-ink-300); }
   .btn-danger {
-    background: #B42318;
+    background: var(--color-danger-500);
     color: var(--color-paper);
   }
-  .btn-danger:hover:not(:disabled) { background: #912018; transform: translateY(-1px); }
+  .btn-danger:hover:not(:disabled) { background: var(--color-danger-700); transform: translateY(-1px); }
   .btn-ghost { color: var(--color-ink-600); }
   .btn-ghost:hover:not(:disabled) { background: rgb(14 27 44 / 0.05); color: var(--color-ink-900); }
   .btn-sm { height: 2.25rem; padding: 0 0.875rem; font-size: 13px; }
@@ -303,10 +355,10 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
   .field:focus {
     outline: none;
     border-color: var(--color-signal-600);
-    box-shadow: 0 0 0 4px rgb(91 201 122 / 0.18);
+    box-shadow: 0 0 0 4px rgb(11 122 107 / 0.18); /* relay-500 */
   }
-  .field[aria-invalid="true"] { border-color: #F87171; }
-  .field[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px rgb(248 113 113 / 0.18); }
+  .field[aria-invalid="true"] { border-color: var(--color-danger-500); }
+  .field[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px rgb(179 38 30 / 0.18); } /* danger-500 */
   .field:disabled { background: var(--color-bone-50); color: var(--color-ink-500); cursor: not-allowed; }
   .field-label {
     display: block;
@@ -414,7 +466,7 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
   /* Code */
   .code-block {
     background: var(--color-brand-navy);
-    color: #E6EAF0;
+    color: var(--color-ink-100);
     font-family: var(--font-mono), ui-monospace, monospace;
     font-size: 12.5px;
     line-height: 1.7;
@@ -440,7 +492,7 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
     background-image:
       radial-gradient(60% 50% at 15% 10%, rgb(11 122 107 / 0.55), transparent 70%),
       radial-gradient(45% 40% at 90% 95%, rgb(245 165 36 / 0.28), transparent 70%),
-      radial-gradient(50% 50% at 80% 20%, rgb(91 201 122 / 0.16), transparent 70%);
+      radial-gradient(50% 50% at 80% 20%, rgb(44 197 174 / 0.16), transparent 70%); /* pulse-500, a dark ground */
   }
   .auth-canvas {
     background-color: var(--color-bone-100);
@@ -548,8 +600,8 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* Animated dot for ACTIVE pills */
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(91 201 122 / 0.5); }
-  50%      { box-shadow: 0 0 0 6px rgb(91 201 122 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(11 122 107 / 0.5); }  /* relay-500 */
+  50%      { box-shadow: 0 0 0 6px rgb(11 122 107 / 0); }
 }
 .animate-pulse-dot { animation: pulse-dot 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 

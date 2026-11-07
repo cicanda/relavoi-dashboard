@@ -9,7 +9,8 @@
     "check:copy": "node check-em-dashes.js",
     "check:backend-contract": "node scripts/vercel-ignore-build.mjs --explain",
     "check:sdk-versions": "node scripts/check-sdk-versions.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:tokens": "node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.13",

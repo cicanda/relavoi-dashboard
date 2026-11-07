@@ -36,6 +36,13 @@ jobs:
         # when GitHub rate limits it or the runner has no egress.
         run: npm run check:sdk-versions
 
+      - name: Design tokens
+        # Fails on a colour or a font that is not a brand token, and on a
+        # Tailwind colour utility whose family is not declared in the token
+        # file. The brand pass missed two literals and about 110 utility
+        # classes; both classes of miss were found by eye, which does not
+        # scale. See the header of the script.
+        run: npm run check:tokens
       - name: Build
         # NEXT_PUBLIC_API_URL is baked at build time. For previews/CI we use a
         # placeholder; the production deploy overrides this via the Vercel
