@@ -450,7 +450,7 @@ export function EndSessionDialog({
             type="button"
             onClick={() => onConfirm(cutNow ? 0 : undefined)}
             disabled={busy}
-            className="btn h-11 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+            className="btn btn-danger h-11"
           >
             {busy ? "Ending…" : "End session"}
           </button>

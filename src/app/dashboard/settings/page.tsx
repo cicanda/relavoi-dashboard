@@ -279,12 +279,31 @@ function GeneralCard({
   );
 }
 
+/**
+ * The plan ladder, in brand colours.
+ *
+ * It used to run bone, blue, violet, signal: two of those four are Tailwind's
+ * own palette and violet has no brand equivalent at all, which is why the
+ * token check had to allowlist it. The ladder is now Slate, Relay Teal, then
+ * Ink, then Ink carrying Pulse Teal, which reads as weight increasing with
+ * the plan and uses nothing that is not ours.
+ *
+ * Pulse Teal appears on the Ink chip and nowhere else, per the guidelines: it
+ * is 8.01:1 on Ink and 2.16:1 on paper, so a light ground would have been
+ * both off-brand and unreadable.
+ *
+ * Contrast, every one against the ground it actually sits on:
+ *   STARTER     #313D4A on Slate at 15% over white  9.08:1
+ *   GROWTH      #096E60 on Relay at 15% over white  5.00:1
+ *   SCALE       #FFFFFF on Ink                     17.33:1
+ *   ENTERPRISE  #2CC5AE on Ink                      8.01:1
+ */
 function TierBadge({ tier }: { tier: Tier }) {
   const styles: Record<Tier, string> = {
-    STARTER: "bg-bone-200 text-ink-700",
-    GROWTH: "bg-blue-500/15 text-blue-700",
-    SCALE: "bg-violet-500/15 text-violet-700",
-    ENTERPRISE: "bg-signal-500/20 text-signal-700",
+    STARTER: "bg-ink-500/15 text-ink-700",
+    GROWTH: "bg-relay-500/15 text-relay-700",
+    SCALE: "bg-ink-900 text-paper",
+    ENTERPRISE: "bg-ink-900 text-pulse-500",
   };
   return (
     <span

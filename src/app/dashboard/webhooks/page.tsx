@@ -619,7 +619,7 @@ function WebhooksForm({
               type="button"
               disabled={regenMutation.isPending}
               onClick={handleRegen}
-              className="btn bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+              className="btn btn-danger"
             >
               {regenMutation.isPending ? "Regenerating..." : "Regenerate"}
             </button>

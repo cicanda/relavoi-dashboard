@@ -230,7 +230,7 @@ export default function SessionDetailPage({
                   setEndError(null);
                   setEndOpen(true);
                 }}
-                className="btn bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                className="btn btn-danger"
               >
                 End session
               </button>

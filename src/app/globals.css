@@ -110,11 +110,13 @@
      why scripts/check-design-tokens.mjs also fails on a colour utility whose
      family is not declared in this block.
 
-     violet is deliberately absent. It is the fourth CATEGORICAL accent on the
-     plan badges and pricing dots, sitting beside sky and signal, and the brand
-     has no fourth accent to give it. Collapsing it into info would make GROWTH
-     and SCALE the same colour. That is a palette decision, so it is listed in
-     the checker allowlist for Genesis rather than guessed at here. */
+     violet is absent because nothing asks for it any more. It used to be the
+     fourth CATEGORICAL accent on the plan badges and the pricing dots, and
+     the brand had no fourth accent to give it, so it sat in the checker's
+     allowlist waiting for a palette decision. That decision was made on
+     7 November 2026: the plan ladder is Slate, Relay Teal, Ink, and Pulse
+     Teal on Ink, which needs four values the brand already has. The
+     allowlist is empty. */
 
   /* One derived step the brand ramp did not have: a hairline border for a
      tinted card. Mixed 60% toward white in linear light, the same rule as
@@ -317,6 +319,24 @@ table, .tabular-nums { font-variant-numeric: tabular-nums; }
     box-shadow: var(--shadow-sm);
   }
   .btn-secondary:hover:not(:disabled) { background: var(--color-bone-50); color: var(--color-ink-900); border-color: var(--color-ink-300); }
+  /**
+   * The destructive button. One of them, in both consoles, with the same
+   * values in each.
+   *
+   * Three buttons here wrote `bg-red-50 text-red-700 border border-red-200
+   * hover:bg-red-100` out by hand, which is this rule spelled in utilities
+   * and one bug: red-100 and red-50 are the same value since the families
+   * were re-pointed at the danger tones, so the hover did nothing. It moves
+   * to danger-200 now, which is a real step.
+   *
+   * danger-700 on danger-100 is 6.56:1, and 4.94:1 on the hover ground.
+   */
+  .btn-danger {
+    background: var(--color-danger-100);
+    color: var(--color-danger-700);
+    border: 1px solid var(--color-danger-200);
+  }
+  .btn-danger:hover:not(:disabled) { background: var(--color-danger-200); }
   .btn-sm { height: 2.25rem; padding: 0 0.875rem; font-size: 13px; }
 
   /* Inline text link with an arrow, e.g. "View all ›" */
